@@ -1,9 +1,12 @@
 ﻿using UnityEngine;
 
-namespace DefaultNamespace
+namespace Core
 {
-    public class AIManager : MonoBehaviour
+    public class AIManager : ActorManager
     {
-        
+        public override void OnGameTurnChange()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
