@@ -11,6 +11,11 @@ namespace Board
         {
             Free = true;
         }
+
+        public void SetFree(bool active)
+        {
+            Free = active;
+        }
     
         // Start is called before the first frame update
         private void Start()
