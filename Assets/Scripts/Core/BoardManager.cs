@@ -3,24 +3,27 @@ using System.Collections.Generic;
 using Board;
 using Interaction;
 using UnityEngine;
-using Space = Board.Space;
 
 namespace Core
 {
     public sealed class BoardManager : MonoBehaviour
     {
         [SerializeField] private BoardLoader boardLoader;
-        private byte ColumnsInt => boardLoader.columnsInt;
-        private byte RowsInt => boardLoader.rowsInt;
+        public BoardInfo BoardInfo { get; private set; }
+        private byte ColumnsInt => boardLoader.ColumnsInt;
+        private byte RowsInt => boardLoader.RowsInt;
         private ushort Capacity => boardLoader.Capacity;
-        private List<Space> Spaces  => boardLoader.Spaces;
         private List<Disc> Discs => boardLoader.Discs;
         private List<Column> Columns => boardLoader.Columns;
+        
 
+        public void SetupScene()
+        {
+            boardLoader.BuildBoard();
+            BoardInfo = new BoardInfo(boardLoader);
+        }
         
-        public void SetupScene() => boardLoader.SetupScene();
-        
-        public void ForEachColumn(Column.Interaction method)
+        public void ForEachColumnAddInteraction(IColumInteraction.Interaction method)
         {
             for (byte columnInt = 0; columnInt < ColumnsInt; ++columnInt)
             {
@@ -28,7 +31,7 @@ namespace Core
             }
         }
         
-        public void ForEachColumnRemove(Column.Interaction method)
+        public void ForEachColumnRemoveInteraction(IColumInteraction.Interaction method)
         {
             for (byte columnInt = 0; columnInt < ColumnsInt; ++columnInt)
             {
@@ -100,92 +103,6 @@ namespace Core
                 }
             }
             return false;
-        }
-        
-        public void ForEachSpace(ushort startColumn, ushort endColumn, Action<Space> method)
-        {
-            startColumn *= RowsInt;
-            endColumn *= RowsInt;
-            
-            for (ushort i = startColumn; i < endColumn; ++i)
-            {
-                ushort row    = (ushort)(i / RowsInt);
-                ushort column = (ushort)(i % RowsInt);
-                method(Spaces[i]);
-                
-                Debug.Log($"{row}, {column}");
-            }
-        }
-        
-        /// Debug, no use Actually
-        public void ForEachSpaceInColumn(Column column)
-        {
-            ushort index = (ushort)Columns.FindIndex( element => element == column);
-            
-            ushort startColumn = (ushort)(RowsInt * index);
-            ushort endColumn = (ushort)(RowsInt * (index + 1));
-            
-            for (ushort i = startColumn; i < endColumn; ++i)
-            {
-                ushort iRow    = (ushort)(i / RowsInt);
-                ushort iColumn = (ushort)(i % RowsInt);
-                Debug.Log($"{iRow}, {iColumn}");
-            }
-        }
-        
-        /// List of free positions
-        public List<Space> ListOfSpacesInColumn(Column column)
-        {
-            List<Space> spacesForColumn = new List<Space>();
-            ushort index = (ushort)Columns.FindIndex( element => element == column);
-            
-            ushort startColumn = (ushort)(RowsInt * index);
-            ushort endColumn = (ushort)(RowsInt * (index + 1));
-            
-            for (ushort i = startColumn; i < endColumn; ++i)
-            {
-                // ushort srow    = (ushort)(i / rows);
-                // ushort scolumn = (ushort)(i % rows);
-                // Debug.Log($"{srow}, {scolumn}");
-                spacesForColumn.Add(Spaces[i]);
-            }
-            return spacesForColumn;
-        }
-        
-        public Space FirstSpaceInColumn(Column column)
-        {
-            ushort index = (ushort)Columns.FindIndex( element => element == column);
-            ushort startColumn = (ushort)(RowsInt * index);
-            ushort endColumn = (ushort)(RowsInt * (index + 1));
-            
-            for (ushort i = startColumn; i < endColumn; ++i)
-            {
-                if(Spaces[i].Free) return Spaces[i];
-            }
-            return null;
-        }
-        
-        
-        public Disc FirstDiscInColumn(Column column)
-        {
-            ushort index = (ushort)Columns.FindIndex( element => element == column);
-            ushort startColumn = (ushort)(RowsInt * index);
-            ushort endColumn = (ushort)(RowsInt * (index + 1));
-            
-            for (ushort i = startColumn; i < endColumn; ++i)
-            {
-                if (!Discs[i].Visibility)
-                {
-                    Discs[i].SetVisibility(true);
-                    //Discs[i].StartAnimation();
-                    Spaces[i].SetFree(false);
-                    return Discs[i];
-                }
-            }
-            
-            // Any disc is available 
-            // remove column interaction
-            return null;
         }
     }
 }

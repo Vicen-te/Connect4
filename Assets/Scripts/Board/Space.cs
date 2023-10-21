@@ -3,30 +3,27 @@ using UnityEngine;
 
 namespace Board
 {
-    public class Space : Circle
+    [RequireComponent(typeof(SpriteRenderer))]
+    public class Space : MonoBehaviour
     {
-        public bool Free { get; private set; }
-
-        private Space()
+        [SerializeField] protected SpriteRenderer spriteRenderer;
+        public float Radius => GetRadius();
+        public KeyValuePair<int, int> GamePosition { get; private set; }
+    
+        public void SetPosition(Vector2 position)
         {
-            Free = true;
-        }
-
-        public void SetFree(bool active)
-        {
-            Free = active;
+            transform.position = position;
         }
     
-        // Start is called before the first frame update
-        private void Start()
+        public void SetGamePosition(KeyValuePair<int, int> position)
         {
-            
+            GamePosition = position;
         }
-
-        // Update is called once per frame
-        void Update()
+    
+        private float GetRadius()
         {
-        
+            Vector3 halfSize = spriteRenderer.sprite.bounds.extents;
+            return halfSize.x > halfSize.y ? halfSize.x : halfSize.y;
         }
     }
 }

@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using Board;
 using Interaction;
@@ -16,6 +14,7 @@ namespace Core
     
         [Header("References")] 
         [SerializeField] private BoardManager boardManager;
+        private BoardInfo BoardInfo => boardManager.BoardInfo;
         
         [Header("Actors")] 
         [SerializeField] private List<PlayerManager> playerList; 
@@ -28,32 +27,38 @@ namespace Core
         // private bool _isFinished;
         private ActorManager _currentActor;
     
-        // delegate to OnGameTurnChange ActorManager
-        public delegate void GameTurnChange();
-        public event GameTurnChange OnActorTurnChange;
-    
-
+        // Not enough space
+        private bool _full;
+        
         // Start is called before the first frame update
         private void Start()
         {
+            foreach (AIManager aiManger in aiList)
+            {
+                aiManger.GetClassWithInterface();
+                aiManger.OnInteraction += OnMoveDone;
+            }
+            
             _actorList = new List<ActorManager>(playerList.Count + aiList.Count);
             _actorList.AddRange(playerList);
             _actorList.AddRange(aiList);
 
             _players = _actorList.Count;
             boardManager.SetupScene();
-            boardManager.ForEachColumn(OnMoveDone);
 
             // Minus one position, it will be added in the ChangeTurn method 
             _turn = startPlayer-1;
         
             ChangeTurn();
+            CheckActor();
         }
 
-        private void RemoveLastActorToDelegate()
+        private void ColumnsIteration(bool active)
         {
-            // Unlink last actor method
-            OnActorTurnChange -= _actorList[_turn].OnGameTurnChange;
+            if (active)
+                boardManager.ForEachColumnAddInteraction(OnMoveDone);
+            else
+                boardManager.ForEachColumnRemoveInteraction(OnMoveDone);
         }
     
         private void ChangeTurn()
@@ -63,12 +68,22 @@ namespace Core
             // Set current actor
             _currentActor = _actorList[_turn];
         
-            // Change settings (like disc color) 
-            OnActorTurnChange += _actorList[_turn].OnGameTurnChange;
-        
-            // execute actor delegate
-            // ReSharper disable once PossibleNullReferenceException
-            OnActorTurnChange.Invoke();
+            // Change settings (like column interactions) 
+            _currentActor.OnGameTurnChange(BoardInfo);
+        }
+
+        private void CheckActor()
+        {
+            // Turn column off if it is the AI's turn
+            if (_currentActor.GetType() == typeof(AIManager))
+            {
+                ColumnsIteration(false);
+            }
+            // Turn column interaction on if it is the player's turn
+            else
+            {
+                ColumnsIteration(true);
+            }
         }
 
         private bool CheckActorOwner(Disc disc)
@@ -79,7 +94,16 @@ namespace Core
         private bool CheckFinish()
         {
             // check if its full the board
-            bool enoughSpace;
+            int amount = 0;
+            foreach (Disc disc in BoardInfo.Discs)
+            {
+                if (disc.Visibility) ++amount;
+            }
+
+            if (amount == BoardInfo.Discs.Count)
+            {
+                return _full = true;
+            }
             
             // Vertical Check 
             if (boardManager.CheckConnect4
@@ -169,42 +193,38 @@ namespace Core
 
         private void OnMoveDone(Column column)
         {
-            // Don't continue
-            // if(_isFinished) return;
-        
-            // Get Space
-            // Check for free spaces
-            // Space spaceOfColumn = boardManager.FirstSpaceInColumn(column);
-            // Debug.Log($"{spaceOfColumn.name}");
-        
             // Reference to Disc
-            Disc disc = boardManager.FirstDiscInColumn(column);
-            if(disc == null) return;
-
-            // Send disc to _currentActor
-            // Save disc position in another Disc list
-            // _currentActor.AddDiscToActor(disc);
+            Disc disc = BoardInfo.FirstDiscInColumn(column);
+            
+            // Execute the last turn again
+            if (!disc)
+            {
+                _turn -= 1;
+                ChangeTurn();
+                return;
+            }
+            
+            // Change disc values
+            disc.SetVisibility(true);
+            // disc.StartAnimation();
             disc.SetActorOwner(_turn);
             disc.SetColor(_currentActor.GetColor());
 
-            RemoveLastActorToDelegate();
+            ColumnsIteration(false);
 
             // Results     
             if (CheckFinish())
             {
-                boardManager.ForEachColumnRemove(OnMoveDone);
-                Debug.Log("WINNN!");
+                if(_full)
+                    Debug.Log("FULL!");
+                else
+                    Debug.Log("WINNN!");
             }
             else
             {
                 ChangeTurn();
+                CheckActor();
             }
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-        
         }
     }
 }

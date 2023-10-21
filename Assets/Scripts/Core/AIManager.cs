@@ -1,20 +1,39 @@
-﻿using System;
+﻿using System.Collections;
 using AI;
+using Board;
 using UnityEngine;
-using Object = UnityEngine.Object;
+using Interaction;
 
 namespace Core
 {
-    public class AIManager : ActorManager
+    public class AIManager : ActorManager, IColumInteraction
     { 
-        [SerializeField]
-        private Object script; // works
-        public AIScript Script => script as AIScript;
+        private IScript _script;
+        public event IColumInteraction.Interaction OnInteraction;
 
-        public override void OnGameTurnChange()
+        public void GetClassWithInterface()
         {
-            base.OnGameTurnChange();
-            // Turn column off if it is the AI's turn
+            TryGetComponent(out _script);
+        }
+
+        // ReSharper disable Unity.PerformanceAnalysis
+        public override void OnGameTurnChange(BoardInfo boardInfo)
+        {
+            Debug.Log(ActorName);
+            
+            // Execute AI script
+            StartCoroutine(MakeInteraction(boardInfo));
+        }
+
+        // ReSharper disable Unity.PerformanceAnalysis
+        private IEnumerator MakeInteraction(BoardInfo boardInfo)
+        {
+            yield return new WaitForSeconds(0.2f);
+            Column selectedColumn = _script.ExecuteAlgorithm(boardInfo); 
+            
+            // Invoke delegate
+            OnInteraction?.Invoke(selectedColumn);
+            yield return null;
         }
     }
 }

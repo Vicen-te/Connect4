@@ -2,13 +2,12 @@ using UnityEngine;
 
 namespace Interaction
 {
-    public class Column : MonoBehaviour
+    public class Column : MonoBehaviour, IColumInteraction
     {
         [SerializeField] private new BoxCollider2D collider2D;
     
         // delegate to OnMoveDone GameManager
-        public delegate void Interaction(Column space);
-        public event Interaction OnInteraction;
+        public event IColumInteraction.Interaction OnInteraction;
 
         public void SetPosition(Vector2 position)
         {

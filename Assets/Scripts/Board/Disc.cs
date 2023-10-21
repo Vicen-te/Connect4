@@ -1,11 +1,9 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Board
 {
-    public class Disc : Circle
+    public class Disc : Space
     {
         private int _actorOwner;
         public int ActorOwner => _actorOwner;
@@ -63,18 +61,6 @@ namespace Board
 
             transform.position = new Vector2(transform.position.x, _lastYPosition);
             yield return null;
-        }
-
-        // Start is called before the first frame update
-        private void Start()
-        {
-            
-        }
-
-        // Update is called once per frame
-        private void Update()
-        {
-        
         }
     }
 }

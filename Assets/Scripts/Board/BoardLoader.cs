@@ -1,20 +1,21 @@
 ﻿using System.Collections.Generic;
-using Board;
 using Interaction;
 using UnityEngine;
-using Space = Board.Space;
 
-namespace Core
+namespace Board
 {
     public class BoardLoader : MonoBehaviour
     {
         [Header("Board")]
-        [SerializeField, Range(0, 10)] public byte columnsInt = 7;
-        [SerializeField, Range(0, 10)] public byte rowsInt = 6;
+        [SerializeField, Range(0, 10)] private byte columnsInt = 7;
+        [SerializeField, Range(0, 10)] private byte rowsInt = 6;
         [Tooltip("Space between discs"), SerializeField, Range(0, 1)] private float spaceAddition = 0.25f;
         public ushort Capacity { get; private set; } //< columns * rows => 7 * 6 = 42
+        public byte ColumnsInt => columnsInt;
+        public byte RowsInt => rowsInt;
         
         [Header("Prefabs")]
+        //TODO: try catch with prefabs (absolute route).
         [SerializeField] private GameObject spacePrefab;
         [SerializeField] private GameObject discPrefab;
         [SerializeField] private GameObject backGroundPrefab;
@@ -22,23 +23,21 @@ namespace Core
         
         // Space radius in Unity units
         private float _spaceRadius;
-        
-        public List<Space> Spaces { get; private set; }
+
         public List<Disc> Discs { get; private set; }
         public List<Column> Columns { get; private set; }
 
-        public void SetupScene()
+        public void BuildBoard()
         {
             Capacity = (ushort)(rowsInt * columnsInt);
-            Spaces = new List<Space>(Capacity);
             Discs = new List<Disc>(Capacity);
             Columns = new List<Column>(columnsInt);
 
             // Space Radius
             GameObject spaceRadiusGo = Instantiate(spacePrefab);
-            spaceRadiusGo.transform.TryGetComponent(out SpriteRenderer spriteRenderer);
+            spaceRadiusGo.TryGetComponent(out Space space);
             spaceRadiusGo.name = "spaceRadius";
-            _spaceRadius = Circle.GetRadius(spriteRenderer);
+            _spaceRadius = space.Radius;
 
             // Check Scale
             Vector3 spaceScale = spaceRadiusGo.transform.localScale;
@@ -52,11 +51,11 @@ namespace Core
             // Create Board
             SpaceAndDiscCreation();
             BackGroundCreation();
-            ClicksColumnsCreation();
+            ColumnsCreation();
             // ForEachSpace((ushort)(columns-1), columns, (x,y) => {});
         }
 
-        private void ClicksColumnsCreation()
+        private void ColumnsCreation()
         {
             for (byte columnInt = 0; columnInt < columnsInt; ++columnInt)
             {
@@ -117,7 +116,6 @@ namespace Core
                 
                 space.SetPosition(spacePosition);
                 space.SetGamePosition(gamePosition);
-                Spaces.Add(space);
                 
                 disc.SetPosition(spacePosition);
                 disc.SetGamePosition(gamePosition);
