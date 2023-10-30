@@ -26,9 +26,6 @@ namespace Core
     
         // private bool _isFinished;
         private ActorManager _currentActor;
-    
-        // Not enough space
-        private bool _full;
         
         // Start is called before the first frame update
         private void Start()
@@ -86,113 +83,10 @@ namespace Core
             }
         }
 
-        private bool CheckActorOwner(Disc disc)
-        {
-            return disc.ActorOwner == _turn && disc.Visibility;
-        }
-        
-        private bool CheckFinish()
-        {
-            // check if its full the board
-            int amount = 0;
-            foreach (Disc disc in BoardInfo.Discs)
-            {
-                if (disc.Visibility) ++amount;
-            }
-
-            if (amount == BoardInfo.Discs.Count)
-            {
-                return _full = true;
-            }
-            
-            // Vertical Check 
-            if (boardManager.CheckConnect4
-                (
-                    new KeyValuePair<int, int>(0, 1),
-                    new KeyValuePair<int, int>(0, 2),
-                    new KeyValuePair<int, int>(0, 3),
-                    CheckActorOwner,
-                    (disc1, disc2, disc3, disc4) =>
-                    {
-                        return (disc2.GamePosition.Key == disc1.GamePosition.Key &&
-                                disc3.GamePosition.Key == disc1.GamePosition.Key &&
-                                disc4.GamePosition.Key == disc1.GamePosition.Key &&
-            
-                                disc2.GamePosition.Value == disc1.GamePosition.Value + 1 &&
-                                disc3.GamePosition.Value == disc1.GamePosition.Value + 2 &&
-                                disc4.GamePosition.Value == disc1.GamePosition.Value + 3);
-                    }
-                )
-               )
-                return true;
-
-            // Horizontal Check 
-            if (boardManager.CheckConnect4
-                (   new KeyValuePair<int, int>(1, 0),
-                    new KeyValuePair<int, int>(2, 0),
-                    new KeyValuePair<int, int>(3, 0),
-                    CheckActorOwner,
-                    (disc1, disc2, disc3, disc4) =>
-                    {
-                        return (disc2.GamePosition.Key == disc1.GamePosition.Key + 1 &&
-                                disc3.GamePosition.Key == disc1.GamePosition.Key + 2 &&
-                                disc4.GamePosition.Key == disc1.GamePosition.Key + 3 &&
-            
-                                disc2.GamePosition.Value == disc1.GamePosition.Value &&
-                                disc3.GamePosition.Value == disc1.GamePosition.Value &&
-                                disc4.GamePosition.Value == disc1.GamePosition.Value);
-                    }
-                )
-               )
-                return true;
-            
-            // Ascending Diagonal Check 
-            if (boardManager.CheckConnect4
-                (
-                    new KeyValuePair<int, int>(-1, 1),
-                    new KeyValuePair<int, int>(-2, 2),
-                    new KeyValuePair<int, int>(-3, 3),
-                    CheckActorOwner,
-                    (disc1, disc2, disc3, disc4) =>
-                    {
-                        return (disc2.GamePosition.Key == disc1.GamePosition.Key - 1 &&
-                                disc3.GamePosition.Key == disc1.GamePosition.Key - 2 &&
-                                disc4.GamePosition.Key == disc1.GamePosition.Key - 3 &&
-            
-                                disc2.GamePosition.Value == disc1.GamePosition.Value + 1 &&
-                                disc3.GamePosition.Value == disc1.GamePosition.Value + 2 &&
-                                disc4.GamePosition.Value == disc1.GamePosition.Value + 3);
-                    }
-                )
-               )
-                return true;
-            
-            // Descending Diagonal Check
-            if (boardManager.CheckConnect4
-                (
-                    new KeyValuePair<int, int>(-1, -1),
-                    new KeyValuePair<int, int>(-2, -2),
-                    new KeyValuePair<int, int>(-3, -3),
-                    CheckActorOwner,
-                    (disc1, disc2, disc3, disc4) =>
-                    {
-                        return (disc2.GamePosition.Key == disc1.GamePosition.Key - 1 &&
-                                disc3.GamePosition.Key == disc1.GamePosition.Key - 2 &&
-                                disc4.GamePosition.Key == disc1.GamePosition.Key - 3 &&
-            
-                                disc2.GamePosition.Value == disc1.GamePosition.Value - 1 &&
-                                disc3.GamePosition.Value == disc1.GamePosition.Value - 2 &&
-                                disc4.GamePosition.Value == disc1.GamePosition.Value - 3);
-                    }
-                )
-               )
-                return true;
-            
-            return false;
-        }
-
         private void OnMoveDone(Column column)
         {
+            //Change to BoardState
+            
             // Reference to Disc
             Disc disc = BoardInfo.FirstDiscInColumn(column);
             
@@ -213,12 +107,16 @@ namespace Core
             ColumnsIteration(false);
 
             // Results     
-            if (CheckFinish())
+            bool finish = BoardInfo.Winner(_turn); 
+            bool draw = BoardInfo.Draw();
+            Debug.Log(draw);
+            
+            if (finish || draw)
             {
-                if(_full)
-                    Debug.Log("FULL!");
+                if(draw)
+                    Debug.Log("DRAW!!!");
                 else
-                    Debug.Log("WINNN!");
+                    Debug.Log("WIN!!!");
             }
             else
             {

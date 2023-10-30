@@ -10,9 +10,6 @@ namespace Board
         [SerializeField, Range(0, 10)] private byte columnsInt = 7;
         [SerializeField, Range(0, 10)] private byte rowsInt = 6;
         [Tooltip("Space between discs"), SerializeField, Range(0, 1)] private float spaceAddition = 0.25f;
-        public ushort Capacity { get; private set; } //< columns * rows => 7 * 6 = 42
-        public byte ColumnsInt => columnsInt;
-        public byte RowsInt => rowsInt;
         
         [Header("Prefabs")]
         //TODO: try catch with prefabs (absolute route).
@@ -24,6 +21,10 @@ namespace Board
         // Space radius in Unity units
         private float _spaceRadius;
 
+        // Getters
+        public ushort Capacity { get; private set; } //< columns * rows => 7 * 6 = 42
+        public byte ColumnsInt => columnsInt;
+        public byte RowsInt => rowsInt;
         public List<Disc> Discs { get; private set; }
         public List<Column> Columns { get; private set; }
 
@@ -120,8 +121,8 @@ namespace Board
                 disc.SetPosition(spacePosition);
                 disc.SetGamePosition(gamePosition);
                 disc.SetVisibility(false);           //< Also the visibility
-                disc.SetStartPosition((columnsInt * (_spaceRadius * 2 + spaceAddition))/2);
-                disc.SetLastPosition(spacePosition.y);
+                disc.SetStartPositionForAnimation((columnsInt * (_spaceRadius * 2 + spaceAddition))/2);
+                disc.SetLastPositionForAnimation(spacePosition.y);
                 Discs.Add(disc);
             }
         }

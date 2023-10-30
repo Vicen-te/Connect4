@@ -5,19 +5,19 @@ namespace Board
 {
     public class Disc : Space
     {
-        private int _actorOwner;
+        private int _actorOwner = -1;
         public int ActorOwner => _actorOwner;
         public bool Visibility => spriteRenderer.enabled;
 
         private float _startYPosition;
         private float _lastYPosition;
 
-        public void SetStartPosition(float startYPosition)
+        public void SetStartPositionForAnimation(float startYPosition)
         {
             _startYPosition = startYPosition;
         }
         
-        public void SetLastPosition(float lastYPosition)
+        public void SetLastPositionForAnimation(float lastYPosition)
         {
             _lastYPosition = lastYPosition;
         }

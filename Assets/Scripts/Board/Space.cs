@@ -8,7 +8,12 @@ namespace Board
     {
         [SerializeField] protected SpriteRenderer spriteRenderer;
         public float Radius => GetRadius();
-        public KeyValuePair<int, int> GamePosition { get; private set; }
+
+        /// Key = Column
+        /// Value = Row 
+        private KeyValuePair<int, int> _gamePosition;
+        public int Column => _gamePosition.Key;
+        public int Row => _gamePosition.Value;
     
         public void SetPosition(Vector2 position)
         {
@@ -17,7 +22,7 @@ namespace Board
     
         public void SetGamePosition(KeyValuePair<int, int> position)
         {
-            GamePosition = position;
+            _gamePosition = position;
         }
     
         private float GetRadius()
