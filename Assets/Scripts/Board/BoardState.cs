@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Interaction;
 using UnityEngine;
 
 namespace Board
@@ -109,15 +108,25 @@ namespace Board
                                   neighbor3 == turn;
                 
                 if(!actorOwner) continue;
-                Debug.Log($"Winn {turn}");
-                Debug.Log($"currentDisc {currentDisc}, neighbor1 {neighbor1}, neighbor2 {neighbor2}, neighbor3 {neighbor3}");
-                return true;
+                
+                // Check anomalies like 4,5,6,7 (two last discs of the first and other two of the first one)
+                bool columns = neighbor1Index / _rowsInt == column + neighbor1Kvp.Key &&
+                               neighbor2Index / _rowsInt == column + neighbor2Kvp.Key &&
+                               neighbor3Index / _rowsInt == column + neighbor3Kvp.Key;
+                
+                bool rows = neighbor1Index % _rowsInt == row + neighbor1Kvp.Value &&
+                            neighbor2Index % _rowsInt == row + neighbor2Kvp.Value &&
+                            neighbor3Index % _rowsInt == row + neighbor3Kvp.Value;
+                    
+                // Debug.Log($"Winn {turn}");
+                // Debug.Log($"currentDisc {currentDisc}, neighbor1 {neighbor1}, neighbor2 {neighbor2}, neighbor3 {neighbor3}");
+                return columns && rows;
             }
             return false;
         }
 
-        public bool Draw() => _discs.All(disc => disc == -1);
-        
+        public bool Draw() => _discs.All(disc => disc== -1);
+         
         public bool Winner(int turn)
         {
             // Vertical Check 
@@ -164,6 +173,24 @@ namespace Board
                 return true;
             
             return false;
+        }
+        
+        public void PrintDiscs()
+        {
+            string board = "";
+            for (int i = _rowsInt-1; i > -1; --i)
+            {
+                string row = "";
+                int position = i;
+                
+                for (int j = 0; j < _columnsInt; ++j)
+                {
+                    row += $"{_discs[position]}\t";
+                    position += _rowsInt;
+                }
+                board += $"{row}\n";
+            }
+            Debug.Log(board);
         }
     }
 }

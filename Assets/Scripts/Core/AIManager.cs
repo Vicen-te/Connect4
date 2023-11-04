@@ -19,7 +19,7 @@ namespace Core
         // ReSharper disable Unity.PerformanceAnalysis
         public override void OnGameTurnChange(BoardInfo boardInfo)
         {
-            Debug.Log(ActorName);
+            //Debug.Log(ActorName);
             
             // Execute AI script
             StartCoroutine(MakeInteraction(boardInfo));

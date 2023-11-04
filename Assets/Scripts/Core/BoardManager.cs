@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Board;
 using Interaction;
 using UnityEngine;
 
 namespace Core
 {
+    // setup board
     public sealed class BoardManager : MonoBehaviour
     {
         [SerializeField] private BoardLoader boardLoader;
@@ -18,7 +18,10 @@ namespace Core
         
         public void SetupScene()
         {
+            // Create board
             boardLoader.BuildBoard();
+            
+            // Pass references
             BoardInfo = new BoardInfo(boardLoader);
         }
         

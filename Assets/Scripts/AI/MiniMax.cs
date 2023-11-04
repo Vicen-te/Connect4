@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Board;
 using Interaction;
 using UnityEngine;
@@ -18,15 +17,11 @@ namespace AI
         {
             public int Value;
             public int Column;
-            public int Alpha;
-            public int Beta;
 
-            public MiniMaxValue(int value, int column, int alpha, int beta)
+            public MiniMaxValue(int value, int column)
             {
                 Value = value;
                 Column = column;
-                Alpha = alpha;
-                Beta = beta;
             }
         }
         
@@ -44,34 +39,34 @@ namespace AI
 
             int alpha = int.MinValue, beta = int.MaxValue;
             MiniMaxValue result = MiniMaxAlgorithm(startNode, depth-1, alpha, beta, Player.Max);
-            Debug.Log($"Final:\n value: {result.Value}, column: {result.Column}");
+            // Debug.Log($"Final:\n value: {result.Value}, column: {result.Column}");
             return boardInfo.Columns[result.Column];
         }
 
         private MiniMaxValue MiniMaxAlgorithm(Node currentNode, int actualDepth, int alpha, int beta, Player player)
         {
-            Debug.Log($"Depth: {actualDepth}");
+            int column = 0;
+            // Debug.Log($"Depth: {actualDepth}");
 
             // Suspend
             if (currentNode.Draw() || actualDepth == 0)
             {
                 int value = currentNode.Evaluate();
-                int column = currentNode.ColumnSelected;
+                column = currentNode.ColumnSelected;
                 
-                Debug.Log($"Value: {value}");
-                return new MiniMaxValue(value, column, alpha, beta);
+                // Debug.Log($"Value: {value}");
+                return new MiniMaxValue(value, column);
             }
             
             List<Node> nodes = currentNode.CreateNodes();
-            Debug.Log($"nodes: {nodes.Count}");
+            // Debug.Log($"nodes: {nodes.Count}");
 
             if (player == Player.Min)
             {
                 int minEval = int.MaxValue;
-                int column = 0;
                 for (int i = 0; i < nodes.Count; ++i)
                 {
-                    Debug.Log($"node: {nodes[i]}");
+                    // Debug.Log($"node: {nodes[i]}");
                     if(nodes[i] == null) continue;
                     MiniMaxValue eval = MiniMaxAlgorithm(nodes[i], actualDepth-1, alpha, beta, Player.Max);
                     if (minEval > eval.Value)
@@ -81,19 +76,18 @@ namespace AI
                     }
                     beta = Math.Min(beta, eval.Value);
                     
-                    Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, i: {i}");
+                    // Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, i: {i}");
                     if (alpha >= beta) 
-                        return new MiniMaxValue(minEval,column,beta,alpha);
+                        return new MiniMaxValue(minEval,column);
                 }
-                return new MiniMaxValue(minEval,column,beta,alpha);
+                return new MiniMaxValue(minEval,column);
             }
             else
             {
                 int maxEval = int.MinValue;
-                int column = 0;
                 for (int i = 0; i < nodes.Count; ++i)
                 {
-                    Debug.Log($"node: {nodes[i]}");
+                    // Debug.Log($"node: {nodes[i]}");
                     if(nodes[i] == null) continue;
                     MiniMaxValue eval = MiniMaxAlgorithm(nodes[i], actualDepth-1, alpha, beta, Player.Min);
                     if (maxEval < eval.Value)
@@ -103,74 +97,13 @@ namespace AI
                     }
                     alpha = Math.Max(alpha, eval.Value);
                     
-                    Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, " +
-                                     $"column: {column}, maxEval: {maxEval} i: {i}");
+                    // Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, " +
+                    //                 $"column: {column}, maxEval: {maxEval} i: {i}");
                     if (alpha >= beta) 
-                        return new MiniMaxValue(maxEval,column,beta,alpha);
+                        return new MiniMaxValue(maxEval,column);
                 }
-                return new MiniMaxValue(maxEval,column,beta,alpha);
+                return new MiniMaxValue(maxEval,column);
             }
-        }
-        
-        private (int, int) MiniValue(Node currentNode, int actualDepth, int alpha, int beta)
-        {
-            Debug.Log($"Depth: {actualDepth}");
-
-            // Suspend
-            if (currentNode.Draw() || actualDepth == 0)
-            {
-                int value = currentNode.Evaluate();
-                Debug.Log($"Value: {value}");
-                return (value, beta);
-            }
-            
-            List<Node> nodes = currentNode.CreateNodes();
-            
-            int nodeAlpha = alpha;
-            int nodeBeta = beta;
-                
-            for (int i = 0; i < nodes.Count; ++i)
-            {
-                if(nodes[i] == null) continue;
-                var (newBeta, newAlpha) = MaxValue(nodes[i], actualDepth-1, nodeAlpha, nodeBeta);
-                beta = Math.Min(beta, newBeta);
-                alpha = newAlpha;
-                Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}");
-                if (alpha >= beta) 
-                    return (beta, alpha);
-            }
-            return (beta, alpha);
-        }
-        
-        private (int, int) MaxValue(Node currentNode, int actualDepth, int alpha, int beta)
-        {
-            Debug.Log($"Depth: {actualDepth}");
-
-            // Suspend
-            if (currentNode.Draw() || actualDepth == 0)
-            {
-                int value = currentNode.Evaluate();
-                Debug.Log($"Value: {value}");
-                return (alpha, value);
-            }
-            
-            List<Node> nodes = currentNode.CreateNodes();
-
-            int nodeAlpha = alpha;
-            int nodeBeta = beta;
-                
-            for (int i = 0; i < nodes.Count; ++i)
-            {
-                if(nodes[i] == null) continue;
-
-                var (newBeta, newAlpha) = MiniValue(nodes[i], actualDepth-1, nodeAlpha, nodeBeta);
-                alpha = Math.Max(alpha, newAlpha);
-                beta = newBeta;
-                Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}");
-                if (alpha >= beta) 
-                    return (beta, alpha);
-            }
-            return (beta, alpha);
         }
     }
     
@@ -185,23 +118,23 @@ namespace AI
             _boardState = new BoardState(boardInfo);
             _turn = turn;
         }
-        
-        public Node(BoardState boardState, int turn)
+
+        private Node(BoardState boardState, int turn)
         {
             _boardState = new BoardState(boardState);
             _turn = turn;
         }
 
-        public bool Draw() => _boardState.Draw();
+        public bool Draw() => false;
 
         public int Evaluate()
         {
             bool player = _boardState.Winner((int)Player.Min);
             bool ai = _boardState.Winner((int)Player.Max);
             
-            Debug.Log($"{player}, {ai}");
-            if(player) return -1000;
+            // Debug.Log($"{player}, {ai}");
             if(ai) return 1000;
+            if(player) return -1000;
             return UnityEngine.Random.Range(-100,100);
         }
 
@@ -225,7 +158,7 @@ namespace AI
                 Node node = new Node(_boardState, nextTurn);
                 int disc = node._boardState.FirstDiscInColumn(i);
                 
-                Debug.Log($"Disc: {disc}, Column: {_columnSelected}");
+                // Debug.Log($"Disc: {disc}, Column: {_columnSelected}");
                 node._boardState.AddDisc(disc, nextTurn);
                 node._columnSelected = i;
                 list.Add(node);

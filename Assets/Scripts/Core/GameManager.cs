@@ -85,8 +85,6 @@ namespace Core
 
         private void OnMoveDone(Column column)
         {
-            //Change to BoardState
-            
             // Reference to Disc
             Disc disc = BoardInfo.FirstDiscInColumn(column);
             
@@ -105,18 +103,31 @@ namespace Core
             disc.SetColor(_currentActor.GetColor());
 
             ColumnsIteration(false);
-
+            
+            //BoardState
+            BoardState boardState = new BoardState(BoardInfo);
+            
             // Results     
-            bool finish = BoardInfo.Winner(_turn); 
-            bool draw = BoardInfo.Draw();
-            Debug.Log(draw);
+            bool finish = boardState.Winner(_turn); 
+            bool draw = boardState.Draw();
             
             if (finish || draw)
             {
                 if(draw)
                     Debug.Log("DRAW!!!");
                 else
-                    Debug.Log("WIN!!!");
+                {
+                    boardState.PrintDiscs();
+                    Debug.Log($"WIN: {_turn}!!!");
+                    
+                    #if UNITY_EDITOR
+                        UnityEditor.EditorApplication.isPlaying = false;
+                    #elif UNITY_WEBPLAYER
+                        Application.OpenURL(webplayerQuitURL);
+                    #else
+                        Application.Quit();
+                    #endif
+                }
             }
             else
             {

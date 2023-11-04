@@ -7,7 +7,7 @@ namespace Core
     {
         public override void OnGameTurnChange(BoardInfo boardInfo)
         {
-            Debug.Log(ActorName);
+            //Debug.Log(ActorName);
         }
     }
 }
