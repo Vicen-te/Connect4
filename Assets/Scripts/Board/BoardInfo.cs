@@ -21,19 +21,15 @@ namespace Board
             Discs = boardLoader.Discs;
             Columns = boardLoader.Columns;
         }
-        public Disc FirstDiscInColumn(Column column)
+
+        public int ColumnIndex(Column column)
         {
-            ushort index = (ushort)Columns.FindIndex( element => element == column);
-            ushort startColumn = (ushort)(RowsInt * index);
-            ushort endColumn = (ushort)(RowsInt * (index + 1));
-            
-            for (ushort i = startColumn; i < endColumn; ++i)
-            {
-                if (!Discs[i].Visibility) return Discs[i];
-            }
-            
-            // No disc is available 
-            return null;
+            return Columns.FindIndex( element => element == column);
+        }
+
+        public Disc GetDisc(int index)
+        {
+            return Discs[index];
         }
     }
 }

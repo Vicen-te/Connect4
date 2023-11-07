@@ -15,10 +15,12 @@ namespace Core
         [Header("References")] 
         [SerializeField] private BoardManager boardManager;
         private BoardInfo BoardInfo => boardManager.BoardInfo;
+        private BoardState _boardState;
         
         [Header("Actors")] 
         [SerializeField] private List<PlayerManager> playerList; 
         [SerializeField] private List<AIManager> aiList; 
+        [SerializeField] private float waitSeconds = 0.2f; 
         private List<ActorManager> _actorList; 
         
         // 0: FirstPlayer, 1: SecondPlayer, ...
@@ -27,13 +29,13 @@ namespace Core
         // private bool _isFinished;
         private ActorManager _currentActor;
         
-        // Start is called before the first frame update
         private void Start()
         {
             foreach (AIManager aiManger in aiList)
             {
                 aiManger.GetClassWithInterface();
                 aiManger.OnInteraction += OnMoveDone;
+                aiManger.SetWaitSeconds(waitSeconds);
             }
             
             _actorList = new List<ActorManager>(playerList.Count + aiList.Count);
@@ -45,6 +47,8 @@ namespace Core
 
             // Minus one position, it will be added in the ChangeTurn method 
             _turn = startPlayer-1;
+
+            _boardState = new BoardState(BoardInfo);
         
             ChangeTurn();
             CheckActor();
@@ -66,7 +70,7 @@ namespace Core
             _currentActor = _actorList[_turn];
         
             // Change settings (like column interactions) 
-            _currentActor.OnGameTurnChange(BoardInfo);
+            _currentActor.OnGameTurnChange(BoardInfo, _boardState);
         }
 
         private void CheckActor()
@@ -85,55 +89,62 @@ namespace Core
 
         private void OnMoveDone(Column column)
         {
-            // Reference to Disc
-            Disc disc = BoardInfo.FirstDiscInColumn(column);
+            // BoardState
+            _boardState = new BoardState(_boardState);
+            int columnIndex = BoardInfo.ColumnIndex(column);
+
+            if (_boardState.Draw())
+            {
+                _boardState.PrintDiscs();
+                Debug.Log("DRAW!!!");
+                // ExitGame();
+                return;
+            }
             
             // Execute the last turn again
-            if (!disc)
+            if (!_boardState.IsColumnEmpty(columnIndex))
             {
                 _turn -= 1;
                 ChangeTurn();
                 return;
             }
             
+            int discIndex = _boardState.FirstDiscInColumn(columnIndex);
+            _boardState.AddDisc(discIndex, _turn);
+            
+            // Reference to Disc
+            Disc disc = BoardInfo.GetDisc(discIndex);
+            
             // Change disc values
             disc.SetVisibility(true);
             // disc.StartAnimation();
-            disc.SetActorOwner(_turn);
             disc.SetColor(_currentActor.GetColor());
-
+            
             ColumnsIteration(false);
             
-            //BoardState
-            BoardState boardState = new BoardState(BoardInfo);
-            
             // Results     
-            bool finish = boardState.Winner(_turn); 
-            bool draw = boardState.Draw();
-            
-            if (finish || draw)
+            if (_boardState.Winner(_turn))
             {
-                if(draw)
-                    Debug.Log("DRAW!!!");
-                else
-                {
-                    boardState.PrintDiscs();
-                    Debug.Log($"WIN: {_turn}!!!");
-                    
-                    #if UNITY_EDITOR
-                        UnityEditor.EditorApplication.isPlaying = false;
-                    #elif UNITY_WEBPLAYER
-                        Application.OpenURL(webplayerQuitURL);
-                    #else
-                        Application.Quit();
-                    #endif
-                }
+                _boardState.PrintDiscs();
+                Debug.Log($"WIN: {_turn}!!!");
+                // ExitGame();
             }
             else
             {
                 ChangeTurn();
                 CheckActor();
             }
+        }
+
+        private void ExitGame()
+        {
+            #if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+            #elif UNITY_WEBPLAYER
+                Application.OpenURL(webplayerQuitURL);
+            #else
+                Application.Quit();
+            #endif
         }
     }
 }

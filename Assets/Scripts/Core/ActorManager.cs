@@ -13,6 +13,6 @@ namespace Core
             return color;
         }
 
-        public abstract void OnGameTurnChange(BoardInfo boardInfo);
+        public abstract void OnGameTurnChange(BoardInfo boardInfo, BoardState boardState);
     }
 }

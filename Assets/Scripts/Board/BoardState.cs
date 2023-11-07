@@ -120,16 +120,17 @@ namespace Board
                     
                 // Debug.Log($"Winn {turn}");
                 // Debug.Log($"currentDisc {currentDisc}, neighbor1 {neighbor1}, neighbor2 {neighbor2}, neighbor3 {neighbor3}");
-                return columns && rows;
+                if(!columns || !rows) continue;
+                return true;
             }
             return false;
         }
 
-        public bool Draw() => _discs.All(disc => disc== -1);
+        public bool Draw() => _discs.All(disc => disc != -1);
          
         public bool Winner(int turn)
         {
-            // Vertical Check 
+            // Horizontal Check 
             if (CheckConnect4
                 (
                     new KeyValuePair<int, int>(0, 1),
@@ -140,7 +141,7 @@ namespace Board
                )
                 return true;
 
-            // Horizontal Check 
+            // Vertical Check 
             if (CheckConnect4
                 (   new KeyValuePair<int, int>(1, 0),
                     new KeyValuePair<int, int>(2, 0),
@@ -153,9 +154,9 @@ namespace Board
             // Ascending Diagonal Check 
             if (CheckConnect4
                 (
-                    new KeyValuePair<int, int>(-1, 1),
-                    new KeyValuePair<int, int>(-2, 2),
-                    new KeyValuePair<int, int>(-3, 3),
+                    new KeyValuePair<int, int>(1, -1),
+                    new KeyValuePair<int, int>(2, -2),
+                    new KeyValuePair<int, int>(3, -3),
                     turn
                 )
                )
@@ -164,9 +165,9 @@ namespace Board
             // Descending Diagonal Check
             if (CheckConnect4
                 (
-                    new KeyValuePair<int, int>(-1, -1),
-                    new KeyValuePair<int, int>(-2, -2),
-                    new KeyValuePair<int, int>(-3, -3),
+                    new KeyValuePair<int, int>(1, 1),
+                    new KeyValuePair<int, int>(2, 2),
+                    new KeyValuePair<int, int>(3, 3),
                     turn
                 )
                )

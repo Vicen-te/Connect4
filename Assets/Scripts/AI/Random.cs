@@ -6,10 +6,11 @@ namespace AI
 {
     public class Random : MonoBehaviour, IScript
     {
-        public Column ExecuteAlgorithm(BoardInfo boardInfo)
+        public int ExecuteAlgorithm(BoardState boardState)
         {
-            int random = UnityEngine.Random.Range(0, boardInfo.Columns.Count);
-            return boardInfo.Columns[random];
+            int random = UnityEngine.Random.Range(0, boardState.Columns);
+            // Debug.Log($"Random Column: {random}");
+            return random;
         }
     }
 }
