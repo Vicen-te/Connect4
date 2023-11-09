@@ -1,29 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using Board;
-using Interaction;
 using UnityEngine;
 
 namespace AI
 {
-    public enum Player { Min, Max }
     public class MiniMax : MonoBehaviour, IScript
     {
-        public int depth = 5;
+        public int depth = 6;
         
         // Max == AI
-        private Player _player;
-        private struct MiniMaxValue
-        {
-            public int Value;
-            public int Column;
-
-            public MiniMaxValue(int value, int column)
-            {
-                Value = value;
-                Column = column;
-            }
-        }
+        private Actor _actor;
         
         public int ExecuteAlgorithm(BoardState boardState)
         {
@@ -35,15 +22,15 @@ namespace AI
              *          new new act new new new new
              */
             
-            Node startNode = new Node(boardState, (int)Player.Min);
-
+            Node startNode = new Node(boardState, (int)Actor.Player);
             int alpha = int.MinValue, beta = int.MaxValue;
-            MiniMaxValue result = MiniMaxAlgorithm(startNode, depth-1, alpha, beta, Player.Max);
+            NodeValue result = MiniMaxAlgorithm(startNode, depth-1, alpha, beta, Actor.AI);
+            
             Debug.Log($"Final:\n value: {result.Value}, column: {result.Column}");
             return result.Column;
         }
 
-        private MiniMaxValue MiniMaxAlgorithm(Node currentNode, int actualDepth, int alpha, int beta, Player player)
+        private NodeValue MiniMaxAlgorithm(Node currentNode, int actualDepth, int alpha, int beta, Actor actor)
         {
             // Debug.Log($"Depth: {actualDepth}");
 
@@ -57,7 +44,7 @@ namespace AI
                 }
                 
                 // Debug.Log($"Value: {value}");
-                return new MiniMaxValue(value, currentNode.ColumnSelected);
+                return new NodeValue(value, currentNode.ColumnSelected);
             }
             
             // Compare
@@ -66,7 +53,7 @@ namespace AI
             
             int column = 0;
 
-            if (player == Player.Min)
+            if (actor == Actor.Player)
             {
                 int minEval = int.MaxValue;
                 for (int i = 0; i < possibleMoves.Count; ++i)
@@ -74,7 +61,7 @@ namespace AI
                     // Debug.Log($"node: {i}");
                     if(possibleMoves[i] == null) continue;
                     
-                    MiniMaxValue eval = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, Player.Max);
+                    NodeValue eval = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, Actor.AI);
                     if (minEval > eval.Value)
                     {
                         minEval = eval.Value;
@@ -85,9 +72,9 @@ namespace AI
                     // Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, " +
                     //           $"column: {column}, minEval: {minEval} i: {i}");
                     if (beta <= alpha) 
-                        return new MiniMaxValue(minEval,column);
+                        return new NodeValue(minEval,column);
                 }
-                return new MiniMaxValue(minEval,column);
+                return new NodeValue(minEval,column);
             }
             else
             {
@@ -97,7 +84,7 @@ namespace AI
                     // Debug.Log($"node: {i}");
                     if(possibleMoves[i] == null) continue;
                     
-                    MiniMaxValue eval = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, Player.Min);
+                    NodeValue eval = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, Actor.Player);
                     if (maxEval < eval.Value)
                     {
                         maxEval = eval.Value;
@@ -108,9 +95,9 @@ namespace AI
                     Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, " +
                               $"column: {column}, maxEval: {maxEval} i: {i}");
                     if (beta <= alpha) 
-                        return new MiniMaxValue(maxEval,column);
+                        return new NodeValue(maxEval,column);
                 }
-                return new MiniMaxValue(maxEval,column);
+                return new NodeValue(maxEval,column);
             }
         }
     }

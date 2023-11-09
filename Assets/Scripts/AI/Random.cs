@@ -1,5 +1,4 @@
 ﻿using Board;
-using Interaction;
 using UnityEngine;
 
 namespace AI

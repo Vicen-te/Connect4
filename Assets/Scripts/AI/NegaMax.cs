@@ -1,40 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using Board;
-using Interaction;
 using UnityEngine;
 
 namespace AI
 {
     public class NegaMax : MonoBehaviour, IScript
     {
-        public int depth = 5;
-        
-        // Max == AI
-        private Player _player;
-        private struct NegaMaxValue
-        {
-            public int Value;
-            public int Column;
-
-            public NegaMaxValue(int value, int column)
-            {
-                Value = value;
-                Column = column;
-            }
-        }
+        public int depth = 6;
         
         public int ExecuteAlgorithm(BoardState boardState)
         {
-            Node startNode = new Node(boardState, (int)Player.Min);
-
+            Node startNode = new Node(boardState, (int)Actor.Player);
             int alpha = int.MinValue+1, beta = int.MaxValue;
-            NegaMaxValue result = NegaMaxAlgorithm(startNode, depth-1, alpha, beta);
+            NodeValue result = NegaMaxAlgorithm(startNode, depth-1, alpha, beta);
+            
             Debug.Log($"Final:\n value: {-result.Value}, column: {result.Column}");
             return result.Column;
         }
 
-        private NegaMaxValue NegaMaxAlgorithm(Node currentNode, int actualDepth, int alpha, int beta)
+        public NodeValue NegaMaxAlgorithm(Node currentNode, int actualDepth, int alpha, int beta)
         {
             //Debug.Log($"Depth: {actualDepth}");
             
@@ -45,9 +30,7 @@ namespace AI
                 
                 if (actualDepth != 0)
                 {
-                    Debug.Log($"Depth: 4, actualDepth: {actualDepth}");
-                    // if (currentNode.WinningTurn == 1) // Ai
-                    //     value = (actualDepth+1) % 2 == 0 ? value : -value;
+                    // Debug.Log($"Depth: 4, actualDepth: {actualDepth}");
                     value = actualDepth % 2 == 0 ? value : -value;
                     value *= actualDepth+1;
                 }
@@ -55,7 +38,7 @@ namespace AI
                 value = depth % 2 == 0 ? -value : value;
                 
                 // Debug.Log($"Value: {value}");
-                return new NegaMaxValue(value, currentNode.ColumnSelected);
+                return new NodeValue(value, currentNode.ColumnSelected);
             }
             
             List<Node> possibleMoves = currentNode.PossibleMoves();
@@ -72,7 +55,7 @@ namespace AI
                     continue;
                 }
                 
-                NegaMaxValue eval = NegaMaxAlgorithm(possibleMoves[i], actualDepth-1, -beta, -alpha);
+                NodeValue eval = NegaMaxAlgorithm(possibleMoves[i], actualDepth-1, -beta, -alpha);
                 int inverseValue = -eval.Value;
                 //Debug.Log($"node {i}: {inverseValue}, {eval.Value}");
                 
@@ -83,13 +66,13 @@ namespace AI
                 }
                 alpha = Math.Max(alpha, inverseValue);
 
-                Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, " +
-                          $"column: {column}, maxEval: {maxEval} i: {i}");
+                // Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, " +
+                //           $"column: {column}, maxEval: {maxEval} i: {i}");
                     
                 if (beta <= alpha) 
-                    return new NegaMaxValue(maxEval,column);
+                    return new NodeValue(maxEval,column);
             }
-            return new NegaMaxValue(maxEval,column);
+            return new NodeValue(maxEval,column);
         }
     }
 }

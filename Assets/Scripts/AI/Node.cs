@@ -8,7 +8,6 @@ namespace AI
         private BoardState _boardState;
         private int _columnSelected;
         private readonly int _turn;
-        public int WinningTurn { get; private set; } = -1;
 
         public Node(BoardState boardState, int turn)
         {
@@ -20,14 +19,14 @@ namespace AI
         {
             // if there is a winner or we can't add more discs
             bool draw = _boardState.Draw();
-            bool winner = _boardState.Winner((int)Player.Min) || _boardState.Winner((int)Player.Max);
+            bool winner = _boardState.Winner((int)Actor.Player) || _boardState.Winner((int)Actor.AI);
             return draw || winner;
         }
 
         public int Evaluate()
         {
-            bool player = _boardState.Winner((int)Player.Min);
-            bool ai = _boardState.Winner((int)Player.Max);
+            bool player = _boardState.Winner((int)Actor.Player);
+            bool ai = _boardState.Winner((int)Actor.AI);
             
             // Debug.Log($"{player}, {ai}");
             if(ai) return 1000;
