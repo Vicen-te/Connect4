@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace Board
 {
-    public struct BoardState
+    public readonly struct BoardState
     {
         private readonly byte _columnsInt;
         private readonly byte _rowsInt;
-        private List<int> _discs;
+        private readonly List<int> _discs;
         private ushort Capacity => (ushort)_discs.Count;
         public readonly ushort Columns;
         
@@ -109,7 +108,10 @@ namespace Board
                 
                 if(!actorOwner) continue;
                 
-                // Check anomalies like 4,5,6,7 (two last discs of the first and other two of the first one)
+                // Check anomalies
+                // Example:
+                //      Columns: 7, Rows: 6
+                //      Discs: 4,5,6,7 (first two last discs of the row: 0 and other last first two of the row: 1)
                 bool columns = neighbor1Index / _rowsInt == column + neighbor1Kvp.Key &&
                                neighbor2Index / _rowsInt == column + neighbor2Kvp.Key &&
                                neighbor3Index / _rowsInt == column + neighbor3Kvp.Key;
@@ -118,8 +120,6 @@ namespace Board
                             neighbor2Index % _rowsInt == row + neighbor2Kvp.Value &&
                             neighbor3Index % _rowsInt == row + neighbor3Kvp.Value;
                     
-                // Debug.Log($"Winn {turn}");
-                // Debug.Log($"currentDisc {currentDisc}, neighbor1 {neighbor1}, neighbor2 {neighbor2}, neighbor3 {neighbor3}");
                 if(!columns || !rows) continue;
                 return true;
             }
@@ -154,9 +154,9 @@ namespace Board
             // Ascending Diagonal Check 
             if (CheckConnect4
                 (
-                    new KeyValuePair<int, int>(1, -1),
-                    new KeyValuePair<int, int>(2, -2),
-                    new KeyValuePair<int, int>(3, -3),
+                    new KeyValuePair<int, int>(1, 1),
+                    new KeyValuePair<int, int>(2, 2),
+                    new KeyValuePair<int, int>(3, 3),
                     turn
                 )
                )
@@ -165,9 +165,9 @@ namespace Board
             // Descending Diagonal Check
             if (CheckConnect4
                 (
-                    new KeyValuePair<int, int>(1, 1),
-                    new KeyValuePair<int, int>(2, 2),
-                    new KeyValuePair<int, int>(3, 3),
+                    new KeyValuePair<int, int>(1, -1),
+                    new KeyValuePair<int, int>(2, -2),
+                    new KeyValuePair<int, int>(3, -3),
                     turn
                 )
                )

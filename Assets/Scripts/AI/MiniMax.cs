@@ -9,7 +9,7 @@ namespace AI
     {
         public int depth = 6;
         
-        // Max == AI
+        // AI == 1
         private Actor _actor;
         
         public int ExecuteAlgorithm(BoardState boardState)
@@ -24,16 +24,15 @@ namespace AI
             
             Node startNode = new Node(boardState, (int)Actor.Player);
             int alpha = int.MinValue, beta = int.MaxValue;
-            NodeValue result = MiniMaxAlgorithm(startNode, depth-1, alpha, beta, Actor.AI);
             
-            Debug.Log($"Final:\n value: {result.Value}, column: {result.Column}");
+            NodeMove result = MiniMaxAlgorithm(startNode, depth-1, alpha, beta, Actor.AI);
+            Debug.Log($"Final:\n value: {result.Score}, column: {result.Column}");
+            
             return result.Column;
         }
 
-        private NodeValue MiniMaxAlgorithm(Node currentNode, int actualDepth, int alpha, int beta, Actor actor)
+        private NodeMove MiniMaxAlgorithm(Node currentNode, int actualDepth, int alpha, int beta, Actor actor)
         {
-            // Debug.Log($"Depth: {actualDepth}");
-
             // Suspend
             if (currentNode.IsEndOfGame() || actualDepth == 0)
             {
@@ -43,14 +42,10 @@ namespace AI
                     value *= actualDepth+1;
                 }
                 
-                // Debug.Log($"Value: {value}");
-                return new NodeValue(value, currentNode.ColumnSelected);
+                return new NodeMove(value, currentNode.ColumnSelected);
             }
             
-            // Compare
             List<Node> possibleMoves = currentNode.PossibleMoves();
-            // Debug.Log($"nodes: {possibleMoves.Count}");
-            
             int column = 0;
 
             if (actor == Actor.Player)
@@ -58,46 +53,40 @@ namespace AI
                 int minEval = int.MaxValue;
                 for (int i = 0; i < possibleMoves.Count; ++i)
                 {
-                    // Debug.Log($"node: {i}");
                     if(possibleMoves[i] == null) continue;
                     
-                    NodeValue eval = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, Actor.AI);
-                    if (minEval > eval.Value)
+                    NodeMove currentMove = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, Actor.AI);
+                    if (minEval > currentMove.Score)
                     {
-                        minEval = eval.Value;
+                        minEval = currentMove.Score;
                         column = i;
                     }
-                    beta = Math.Min(beta, eval.Value);
+                    beta = Math.Min(beta, currentMove.Score);
                     
-                    // Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, " +
-                    //           $"column: {column}, minEval: {minEval} i: {i}");
                     if (beta <= alpha) 
-                        return new NodeValue(minEval,column);
+                        return new NodeMove(minEval,column);
                 }
-                return new NodeValue(minEval,column);
+                return new NodeMove(minEval,column);
             }
             else
             {
                 int maxEval = int.MinValue;
                 for (int i = 0; i < possibleMoves.Count; ++i)
                 {
-                    // Debug.Log($"node: {i}");
                     if(possibleMoves[i] == null) continue;
                     
-                    NodeValue eval = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, Actor.Player);
-                    if (maxEval < eval.Value)
+                    NodeMove currentMove = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, Actor.Player);
+                    if (maxEval < currentMove.Score)
                     {
-                        maxEval = eval.Value;
+                        maxEval = currentMove.Score;
                         column = i;
                     }
-                    alpha = Math.Max(alpha, eval.Value);
+                    alpha = Math.Max(alpha, currentMove.Score);
                     
-                    Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, " +
-                              $"column: {column}, maxEval: {maxEval} i: {i}");
                     if (beta <= alpha) 
-                        return new NodeValue(maxEval,column);
+                        return new NodeMove(maxEval,column);
                 }
-                return new NodeValue(maxEval,column);
+                return new NodeMove(maxEval,column);
             }
         }
     }

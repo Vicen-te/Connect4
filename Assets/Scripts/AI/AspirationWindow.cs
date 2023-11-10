@@ -21,14 +21,16 @@ namespace AI
         {
             Node startNode = new Node(boardState, (int)Actor.Player);
             int alpha = int.MinValue+1, beta = int.MaxValue;
-            NodeValue result = AspirationWindowAlgorithm(startNode, alpha, beta);
-            Debug.Log($"Final AWA:\n value: {result.Value}, column: {result.Column}");
+            
+            NodeMove result = AspirationWindowAlgorithm(startNode, alpha, beta);
+            Debug.Log($"Final AWA:\n value: {-result.Score}, column: {result.Column}");
+            
             return result.Column;
         }
 
-        private NodeValue AspirationWindowAlgorithm(Node startNode, int alpha, int beta)
+        private NodeMove AspirationWindowAlgorithm(Node startNode, int alpha, int beta)
         {
-            NodeValue move;
+            NodeMove currentMove;
             if (previousScore != int.MinValue)
             {
                 alpha = previousScore - windowRange;
@@ -36,21 +38,21 @@ namespace AI
 
                 while (true)
                 {
-                    move = _negaMax.NegaMaxAlgorithm(startNode, depth-1, alpha, beta);
-                    if (move.Value <= alpha) alpha = int.MinValue+1;
-                    else if (move.Value >= beta) beta = int.MaxValue;
+                    currentMove = _negaMax.Algorithm(startNode, depth-1, alpha, beta);
+                    if (currentMove.Score <= alpha) alpha = int.MinValue+1;
+                    else if (currentMove.Score >= beta) beta = int.MaxValue;
                     else break;
                 }
 
-                previousScore = move.Value;
+                previousScore = currentMove.Score;
             }
             else
             {
-                move = _negaMax.NegaMaxAlgorithm(startNode, depth-1, alpha, beta);
-                previousScore = move.Value;
+                currentMove = _negaMax.Algorithm(startNode, depth-1, alpha, beta);
+                previousScore = currentMove.Score;
             }
             
-            return move;
+            return currentMove;
         }
     }
 }
