@@ -1,66 +1,72 @@
 ﻿using System.Collections.Generic;
+using AI.MTD;
 using Board;
 
 namespace AI
 {
     public class Node
     {
-        private BoardState _boardState;
-        private int _columnSelected;
-        private readonly int _turn;
+        protected readonly BoardState BoardState;
+        protected readonly int Turn;
+        
+        protected int Column;
+        public int ColumnSelected => Column;
+        protected int Position;
+        
 
         public Node(BoardState boardState, int turn)
         {
-            _boardState = new BoardState(boardState);
-            _turn = turn;
+            BoardState = new BoardState(boardState);
+            Turn = turn;
         }
-
+        
         public bool IsEndOfGame()
         {
             // if there is a winner or we can't add more discs
-            bool draw = _boardState.Draw();
-            bool winner = _boardState.Winner((int)Actor.Player) || _boardState.Winner((int)Actor.AI);
+            bool draw = BoardState.Draw();
+            bool winner = BoardState.Winner((int)Actor.Player) || BoardState.Winner((int)Actor.AI);
             return draw || winner;
         }
 
         public int Evaluate()
         {
-            bool player = _boardState.Winner((int)Actor.Player);
-            bool ai = _boardState.Winner((int)Actor.AI);
+            int player = BoardState.Evaluate((int)Actor.Player);
+            int ai = BoardState.Evaluate((int)Actor.AI);
             
-            // Debug.Log($"{player}, {ai}");
-            if(ai) return 1000;
-            if(player) return -1000;
-            return UnityEngine.Random.Range(-100,100);
+            const int multiplier = 100;
+            if(ai > player) return ai * multiplier;
+            return -player * multiplier;
         }
-
-        public int ColumnSelected => _columnSelected;
 
         public List<Node> PossibleMoves()
         {
             List<Node> list = new List<Node>();
 
-            for (int i = 0; i < _boardState.Columns; ++i)
+            for (int i = 0; i < BoardState.Columns; ++i)
             {
-                bool empty = _boardState.IsColumnEmpty(i);
+                bool empty = BoardState.IsColumnEmpty(i);
                 if (!empty)
                 {
-                    list.Add(null);
+                    list.Add(default);
                     continue;
                 }
 
-                int nextTurn = (_turn + 1) % 2;
-                
-                Node node = new Node(_boardState, nextTurn);
-                int disc = node._boardState.FirstDiscInColumn(i);
-                
-                // Debug.Log($"Disc: {disc}, Column: {_columnSelected}");
-                node._boardState.AddDisc(disc, nextTurn);
-                node._columnSelected = i;
-                list.Add(node);
+                int nextTurn = (Turn + 1) % 2;
+                GenerateNode(ref list, nextTurn, i);
             }
             
             return list;
+        }
+
+        private void GenerateNode(ref List<Node> list, int nextTurn, int column)
+        {
+            Node node = new Node(BoardState, nextTurn);
+            node.Position = node.BoardState.FirstDiscInColumn(column);
+                
+            // Debug.Log($"Disc: {disc}, Column: {_columnSelected}");
+            node.BoardState.AddDisc(node.Position, nextTurn);
+            node.Column = column;
+            list.Add(node);
         }
     }
 }

@@ -82,6 +82,8 @@ namespace AI
                         column = i;
                     }
                     alpha = Math.Max(alpha, currentMove.Score);
+                    // Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, " +
+                    //           $"column: {column}, maxEval: {maxEval} i: {i}");
                     
                     if (beta <= alpha) 
                         return new NodeMove(maxEval,column);

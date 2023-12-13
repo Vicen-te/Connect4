@@ -1,6 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using AI;
+using AI.MTD;
+using Unity.VisualScripting;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Board
 {
@@ -9,9 +14,10 @@ namespace Board
         private readonly byte _columnsInt;
         private readonly byte _rowsInt;
         private readonly List<int> _discs;
-        private ushort Capacity => (ushort)_discs.Count;
+        public ushort Capacity => (ushort)_discs.Count;
         public readonly ushort Columns;
         
+        // First State Constructor
         public BoardState(BoardInfo boardInfo)
         {
             _columnsInt = boardInfo.ColumnsInt;
@@ -30,7 +36,8 @@ namespace Board
             _columnsInt = boardState._columnsInt;
             _rowsInt = boardState._rowsInt;
             Columns = boardState.Columns;
-
+            
+            // Copy 
             _discs = new List<int>();
             foreach (int disc in boardState._discs)
             {
@@ -63,12 +70,29 @@ namespace Board
         {
             _discs[index] = turn;
         }
+
+        private int EvaluateNeighbor(int turn, int neighborIndex)
+        {
+            // adversary disc
+            int neighborValue = -1;
+            
+            // your disc
+            if (_discs[neighborIndex] == turn)
+                neighborValue = 2;
+            
+            // empty
+            else if (_discs[neighborIndex] == (int)Actor.None)
+                neighborValue = 1;
+
+            return neighborValue;
+        }
         
-        private bool CheckConnect4(KeyValuePair<int, int> neighbor1Kvp,
+        private int CheckConnect4(KeyValuePair<int, int> neighbor1Kvp,
                                   KeyValuePair<int, int> neighbor2Kvp,
                                   KeyValuePair<int, int> neighbor3Kvp,
                                   int turn)
-        { 
+        {
+            int maxNeighborValue = int.MinValue;
             for (ushort i = 0; i < Capacity; ++i)
             {
                 ushort row    = (ushort)(i % _rowsInt);
@@ -96,18 +120,6 @@ namespace Board
                     neighbor3Index >= Capacity) 
                     continue;
                 
-                // Neighbor Discs
-                int neighbor1 = _discs[neighbor1Index];
-                int neighbor2 = _discs[neighbor2Index];
-                int neighbor3 = _discs[neighbor3Index];
-                
-                // Check for same actor owner
-                bool actorOwner = neighbor1 == turn &&
-                                  neighbor2 == turn  &&
-                                  neighbor3 == turn;
-                
-                if(!actorOwner) continue;
-                
                 // Check anomalies
                 // Example:
                 //      Columns: 7, Rows: 6
@@ -121,13 +133,73 @@ namespace Board
                             neighbor3Index % _rowsInt == row + neighbor3Kvp.Value;
                     
                 if(!columns || !rows) continue;
-                return true;
+                
+                // Neighbor Discs values
+                int neighbor1Value = EvaluateNeighbor(turn, neighbor1Index);
+                int neighbor2Value = EvaluateNeighbor(turn, neighbor2Index);
+                int neighbor3Value = EvaluateNeighbor(turn, neighbor3Index);
+                int neighborsValue = neighbor1Value + neighbor2Value + neighbor3Value;
+                
+                if(neighborsValue > maxNeighborValue) maxNeighborValue = neighborsValue;
             }
-            return false;
+            return maxNeighborValue;
         }
 
         public bool Draw() => _discs.All(disc => disc != -1);
          
+        public int Evaluate(int turn)
+        {
+            int[] connects = new int[4];
+            
+            // Horizontal Check 
+            connects[0] = CheckConnect4
+            (
+                new KeyValuePair<int, int>(0, 1),
+                new KeyValuePair<int, int>(0, 2),
+                new KeyValuePair<int, int>(0, 3),
+                turn
+            );
+            if (connects[0] == 6) return 6;
+
+            // Vertical Check 
+            connects[1] = CheckConnect4
+            (   new KeyValuePair<int, int>(1, 0),
+                new KeyValuePair<int, int>(2, 0),
+                new KeyValuePair<int, int>(3, 0),
+                turn
+            );
+            if (connects[1] == 6) return 6;
+
+            
+            // Ascending Diagonal Check 
+            connects[2] = CheckConnect4
+            (
+                new KeyValuePair<int, int>(1, 1),
+                new KeyValuePair<int, int>(2, 2),
+                new KeyValuePair<int, int>(3, 3),
+                turn
+            );
+            if (connects[2] == 6) return 6;
+            
+            // Descending Diagonal Check
+            connects[3] = CheckConnect4
+            (
+                new KeyValuePair<int, int>(1, -1),
+                new KeyValuePair<int, int>(2, -2),
+                new KeyValuePair<int, int>(3, -3),
+                turn
+            );
+            if (connects[3] == 6) return 6;
+
+            int maxConnect = connects[Random.Range(0, 4)];
+            foreach (var connect in connects)
+            {
+                if (connect > maxConnect) maxConnect = connect;
+            }
+            
+            return maxConnect;
+        }
+        
         public bool Winner(int turn)
         {
             // Horizontal Check 
@@ -137,7 +209,7 @@ namespace Board
                     new KeyValuePair<int, int>(0, 2),
                     new KeyValuePair<int, int>(0, 3),
                     turn
-                )
+                ) == 6
                )
                 return true;
 
@@ -147,7 +219,7 @@ namespace Board
                     new KeyValuePair<int, int>(2, 0),
                     new KeyValuePair<int, int>(3, 0),
                     turn
-                )
+                ) == 6
                )
                 return true;
             
@@ -158,7 +230,7 @@ namespace Board
                     new KeyValuePair<int, int>(2, 2),
                     new KeyValuePair<int, int>(3, 3),
                     turn
-                )
+                ) == 6
                )
                 return true;
             
@@ -169,7 +241,7 @@ namespace Board
                     new KeyValuePair<int, int>(2, -2),
                     new KeyValuePair<int, int>(3, -3),
                     turn
-                )
+                ) == 6
                )
                 return true;
             

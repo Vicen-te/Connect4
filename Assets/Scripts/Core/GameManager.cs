@@ -90,7 +90,6 @@ namespace Core
         private void OnMoveDone(Column column)
         {
             // BoardState
-            _boardState = new BoardState(_boardState);
             int columnIndex = BoardInfo.ColumnIndex(column);
 
             if (_boardState.Draw())

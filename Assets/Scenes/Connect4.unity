@@ -169,11 +169,72 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startPlayer: 0
   boardManager: {fileID: 914084844}
-  playerList: []
+  playerList:
+  - {fileID: 1725896832}
   aiList:
-  - {fileID: 456733012}
-  - {fileID: 2081206261}
-  waitSeconds: 0.2
+  - {fileID: 308852093}
+  waitSeconds: 0.5
+--- !u!1 &308852091
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 308852094}
+  - component: {fileID: 308852093}
+  - component: {fileID: 308852092}
+  m_Layer: 0
+  m_Name: AI MTD
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!114 &308852092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 308852091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18837a1adfe10ec4ebbc7af2e66aed0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hashTableLength: 90000000
+  maxIterations: 10
+  depth: 6
+--- !u!114 &308852093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 308852091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9c9636bd3a74e3cbf07efb45f335b5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0.81153756, g: 1, b: 0.27843142, a: 1}
+--- !u!4 &308852094
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 308852091}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &429281076
 GameObject:
   m_ObjectHideFlags: 0
@@ -947,3 +1008,4 @@ SceneRoots:
   - {fileID: 2104119597}
   - {fileID: 429281079}
   - {fileID: 2081206262}
+  - {fileID: 308852094}

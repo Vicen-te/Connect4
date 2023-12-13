@@ -23,7 +23,7 @@ namespace AI
             int alpha = int.MinValue+1, beta = int.MaxValue;
             
             NodeMove result = AspirationWindowAlgorithm(startNode, alpha, beta);
-            Debug.Log($"Final AWA:\n value: {-result.Score}, column: {result.Column}");
+            Debug.Log($"Final:\n value: {-result.Score}, column: {result.Column}");
             
             return result.Column;
         }

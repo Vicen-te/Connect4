@@ -62,14 +62,17 @@ namespace AI
                    }
                    else //< otherwise we can do a Test, search with a null window
                    {
-                       currentMove = NegaScoutAlgorithm(possibleMoves[i], actualDepth, -beta, -currentMove.Score);
-                       currentMove.InverseScore();
+                       NodeMove negativeBestScore = NegaScoutAlgorithm(possibleMoves[i], actualDepth, -beta, -currentMove.Score);
+                       //negativeBestScore.InverseScore();  // the return value is already inversed.
                        
-                       bestScore = currentMove.Score;
+                       bestScore = negativeBestScore.Score; 
                        bestColumn = i;
                    }
 
                    alpha = Math.Max(alpha, bestScore);
+                   
+                   Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, " +
+                             $"bestColumn: {bestColumn}, bestScore: {bestScore} i: {i}");
                    
                    // if we're outside the bounds, prune by exiting
                    if (beta <= alpha) 
