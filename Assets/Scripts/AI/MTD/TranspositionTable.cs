@@ -1,23 +1,35 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace AI.MTD
 {
     public class TranspositionTable
     {
-        public int length;
-        Dictionary<int, BoardRecord> records;
+        private readonly int length;
+        private readonly Dictionary<int, BoardRecord> records;
 
-        protected int UsedRecords, OverwritenRecords, NotFoundRecords, RegCoincidentes, RegNoCoincidentes;
+        public int SavedRecords { get; private set; }
+        public int UsedRecords { get; private set; }
+        public int OverwrittenRecords { get; private set; }
+        public int NotFoundRecords { get; private set; }
+        
+        // RegCoincidences, RegNoCoincidencesx
 
         public TranspositionTable(int length)
         {
             records = new Dictionary<int, BoardRecord>();
             this.length = length;
         }
+        
         public void SaveRecord(BoardRecord record)
         {
-            records[record.hashValue % length] = record;
+            int index = record.HashValue % length;
+
+            if (records.TryGetValue(index, out BoardRecord actualRecord))
+                ++OverwrittenRecords;
+            else
+                ++SavedRecords;
+            
+            records[index] = record;
         }
         
         public BoardRecord GetRecord(int hash)
@@ -25,7 +37,14 @@ namespace AI.MTD
             int key = hash % length;
             if (records.TryGetValue(key, out BoardRecord record))
             {
-                return record.hashValue == hash ? record : null;
+                if (record.HashValue == hash)
+                {
+                    ++UsedRecords;
+                    return record;
+                }
+                
+                ++NotFoundRecords;
+                return null;
             }
             return null;
         }

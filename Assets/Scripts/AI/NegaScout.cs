@@ -1,42 +1,53 @@
 using System;
 using System.Collections.Generic;
 using Board;
+using Core.Actor;
 using UnityEngine;
 
 namespace AI
 {
     public class NegaScout : MonoBehaviour, IScript
     {
-        private NegaMax _negaMax;
+        private NegaMaxAB _negaMax;
         public int depth = 6;
-    
+        private int nodes;
+        private readonly Average average = new();
+        
         private void Start()
         {
-            _negaMax = gameObject.AddComponent<NegaMax>();
+            _negaMax = gameObject.AddComponent<NegaMaxAB>();
             _negaMax.depth = depth;
             TryGetComponent(out _negaMax);
         }
         
-        public int ExecuteAlgorithm(BoardState boardState)
+        public int ExecuteAlgorithm(BoardState boardState, int turn)
         {
-            Node startNode = new Node(boardState, (int)Actor.Player);
-            int alpha = int.MinValue+1, beta = int.MaxValue;
+            nodes = 0;
+            _negaMax.ResetNodes();
+
+            ActorTurn actorTurn = new ActorTurn(turn);
+            Node.SetActorTurn(actorTurn);
+
+            Node startNode = new Node(boardState, actorTurn.Opponent);
+            int alpha = int.MinValue + 1, beta = int.MaxValue;
             
             NodeMove result = NegaScoutAlgorithm(startNode, depth-1, alpha, beta);
-            Debug.Log($"Final:\n value: {-result.Score}, column: {result.Column}");
+            average.Add(nodes);
+            Debug.Log($"value: {-result.Score}, column: {result.Column}, nodes: {nodes}, media: {average.Value}");
             
             return result.Column;
         }
 
         private NodeMove NegaScoutAlgorithm(Node currentNode, int actualDepth, int alpha, int beta)
         {
+            ++nodes;
             // Suspend, If we are done recursing.
             if (currentNode.IsEndOfGame() || actualDepth == 0)
             {
                 return _negaMax.Evaluation(currentNode, actualDepth);
             }
 
-            int bestScore = int.MinValue+1;
+            int bestScore = int.MinValue + 1;
             int bestColumn = 0;
             int adaptiveBeta = beta; //< keep track of the Test window value
             
@@ -49,6 +60,7 @@ namespace AI
                 
                 // Current move evaluation
                 NodeMove currentMove = _negaMax.Algorithm(possibleMoves[i], actualDepth-1, -adaptiveBeta, -alpha);
+                nodes += _negaMax.Nodes;
                 currentMove.InverseScore();
             
                 // Update the best score.
@@ -63,7 +75,7 @@ namespace AI
                    else //< otherwise we can do a Test, search with a null window
                    {
                        NodeMove negativeBestScore = NegaScoutAlgorithm(possibleMoves[i], actualDepth, -beta, -currentMove.Score);
-                       //negativeBestScore.InverseScore();  // the return value is already inversed.
+                       // negativeBestScore.InverseScore();  // the return value is already inversed.
                        
                        bestScore = negativeBestScore.Score; 
                        bestColumn = i;

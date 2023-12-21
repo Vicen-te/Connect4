@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Board
 {
@@ -8,21 +7,10 @@ namespace Board
     {
         [SerializeField] protected SpriteRenderer spriteRenderer;
         public float Radius => GetRadius();
-
-        /// Key = Column
-        /// Value = Row 
-        private KeyValuePair<int, int> _gamePosition;
-        public int Column => _gamePosition.Key;
-        public int Row => _gamePosition.Value;
     
         public void SetPosition(Vector2 position)
         {
             transform.position = position;
-        }
-    
-        public void SetGamePosition(KeyValuePair<int, int> position)
-        {
-            _gamePosition = position;
         }
     
         private float GetRadius()

@@ -1,21 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using AI;
-using AI.MTD;
-using Unity.VisualScripting;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace Board
 {
-    public readonly struct BoardState
+    public struct BoardState
     {
         private readonly byte _columnsInt;
         private readonly byte _rowsInt;
         private readonly List<int> _discs;
-        public ushort Capacity => (ushort)_discs.Count;
+        private const int MaxConnections = 6;
+        private const int DiscEmpty = -1;
+        
         public readonly ushort Columns;
+        public readonly ushort Capacity => (ushort)_discs.Count;
+        public ushort OpponentDisc {get; private set;}
+        public ushort AIDisc {get; private set;}
+        public ushort DiscInUse {get; private set;}
         
         // First State Constructor
         public BoardState(BoardInfo boardInfo)
@@ -25,10 +26,14 @@ namespace Board
             Columns = (ushort)boardInfo.Columns.Count;
 
             _discs = new List<int>();
-            foreach (Disc disc in boardInfo.Discs)
+            for(int i = 0; i < boardInfo.Capacity; i++)
             {
-                _discs.Add(disc.ActorOwner);
+                _discs.Add(DiscEmpty);
             }
+
+            DiscInUse = 0;
+            OpponentDisc = 0;
+            AIDisc = 0;
         }
         
         public BoardState(BoardState boardState)
@@ -43,15 +48,19 @@ namespace Board
             {
                 _discs.Add(disc);
             }
+            
+            DiscInUse = boardState.DiscInUse;
+            OpponentDisc = boardState.OpponentDisc;
+            AIDisc = boardState.AIDisc;
         }
 
-        public bool IsColumnEmpty(int column)
+        public readonly bool IsColumnEmpty(int column)
         {
             ushort endColumn = (ushort)(_rowsInt * (column + 1));
             return _discs[endColumn - 1] == -1;
         }
         
-        public int FirstDiscInColumn(int column)
+        public readonly int FirstDiscInColumn(int column)
         {
             ushort startColumn = (ushort)(_rowsInt * column);
             ushort endColumn = (ushort)(_rowsInt * (column + 1));
@@ -69,25 +78,28 @@ namespace Board
         public void AddDisc(int index, int turn)
         {
             _discs[index] = turn;
+            ++DiscInUse;
+            if (turn == 0) ++OpponentDisc;
+            else           ++AIDisc;
         }
 
-        private int EvaluateNeighbor(int turn, int neighborIndex)
+        private readonly int EvaluateNeighbor(int turn, int neighborIndex)
         {
             // adversary disc
-            int neighborValue = -1;
+            int neighborValue = -2;
             
             // your disc
             if (_discs[neighborIndex] == turn)
                 neighborValue = 2;
             
-            // empty
-            else if (_discs[neighborIndex] == (int)Actor.None)
+            // empty = -1 by default
+            else if (_discs[neighborIndex] == DiscEmpty)
                 neighborValue = 1;
 
             return neighborValue;
         }
         
-        private int CheckConnect4(KeyValuePair<int, int> neighbor1Kvp,
+        private readonly int CheckConnect4(KeyValuePair<int, int> neighbor1Kvp,
                                   KeyValuePair<int, int> neighbor2Kvp,
                                   KeyValuePair<int, int> neighbor3Kvp,
                                   int turn)
@@ -140,14 +152,15 @@ namespace Board
                 int neighbor3Value = EvaluateNeighbor(turn, neighbor3Index);
                 int neighborsValue = neighbor1Value + neighbor2Value + neighbor3Value;
                 
+                if(neighborsValue == MaxConnections) return MaxConnections;
                 if(neighborsValue > maxNeighborValue) maxNeighborValue = neighborsValue;
             }
             return maxNeighborValue;
         }
 
-        public bool Draw() => _discs.All(disc => disc != -1);
+        public readonly bool Draw() => _discs.All(disc => disc != -1);
          
-        public int Evaluate(int turn)
+        public readonly int Evaluate(int turn)
         {
             int[] connects = new int[4];
             
@@ -159,7 +172,7 @@ namespace Board
                 new KeyValuePair<int, int>(0, 3),
                 turn
             );
-            if (connects[0] == 6) return 6;
+            if (connects[0] == MaxConnections) return MaxConnections;
 
             // Vertical Check 
             connects[1] = CheckConnect4
@@ -168,7 +181,7 @@ namespace Board
                 new KeyValuePair<int, int>(3, 0),
                 turn
             );
-            if (connects[1] == 6) return 6;
+            if (connects[1] == MaxConnections) return MaxConnections;
 
             
             // Ascending Diagonal Check 
@@ -179,7 +192,7 @@ namespace Board
                 new KeyValuePair<int, int>(3, 3),
                 turn
             );
-            if (connects[2] == 6) return 6;
+            if (connects[2] == MaxConnections) return MaxConnections;
             
             // Descending Diagonal Check
             connects[3] = CheckConnect4
@@ -189,10 +202,10 @@ namespace Board
                 new KeyValuePair<int, int>(3, -3),
                 turn
             );
-            if (connects[3] == 6) return 6;
+            if (connects[3] == MaxConnections) return MaxConnections;
 
-            int maxConnect = connects[Random.Range(0, 4)];
-            foreach (var connect in connects)
+            int maxConnect = 0;
+            foreach (int connect in connects)
             {
                 if (connect > maxConnect) maxConnect = connect;
             }
@@ -200,7 +213,7 @@ namespace Board
             return maxConnect;
         }
         
-        public bool Winner(int turn)
+        public readonly bool Winner(int turn)
         {
             // Horizontal Check 
             if (CheckConnect4
@@ -209,7 +222,7 @@ namespace Board
                     new KeyValuePair<int, int>(0, 2),
                     new KeyValuePair<int, int>(0, 3),
                     turn
-                ) == 6
+                ) == MaxConnections
                )
                 return true;
 
@@ -219,7 +232,7 @@ namespace Board
                     new KeyValuePair<int, int>(2, 0),
                     new KeyValuePair<int, int>(3, 0),
                     turn
-                ) == 6
+                ) == MaxConnections
                )
                 return true;
             
@@ -230,7 +243,7 @@ namespace Board
                     new KeyValuePair<int, int>(2, 2),
                     new KeyValuePair<int, int>(3, 3),
                     turn
-                ) == 6
+                ) == MaxConnections
                )
                 return true;
             
@@ -241,7 +254,7 @@ namespace Board
                     new KeyValuePair<int, int>(2, -2),
                     new KeyValuePair<int, int>(3, -3),
                     turn
-                ) == 6
+                ) == MaxConnections
                )
                 return true;
             
@@ -264,6 +277,12 @@ namespace Board
                 board += $"{row}\n";
             }
             Debug.Log(board);
+        }
+        
+        public void PrintResult(string condition)
+        {
+            Debug.Log($"{condition}\nDiscs: {DiscInUse}/{Capacity} - Opponent: {OpponentDisc} - AI: {AIDisc}");
+
         }
     }
 }

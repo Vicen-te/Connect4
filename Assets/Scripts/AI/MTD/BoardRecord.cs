@@ -2,19 +2,19 @@ namespace AI.MTD
 {
     public class BoardRecord
     {
-        public int hashValue;
-        public int minScore;
-        public int maxScore;
-        public int bestMove;
-        public int depth;
+        public int HashValue;
+        public int MinScore;
+        public int MaxScore;
+        public int BestMove;
+        public int Depth;
 
         public BoardRecord()
         {
-            hashValue = 0;
-            minScore = 0;
-            maxScore = 0;
-            bestMove = 0;
-            depth = 0;
+            HashValue = 0;
+            MinScore = 0;
+            MaxScore = 0; 
+            BestMove = 0;
+            Depth = 0;
         }
     }
 }

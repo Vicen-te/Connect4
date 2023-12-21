@@ -7,12 +7,13 @@ namespace Board
     // Getters Only
     public sealed class BoardInfo
     {
-        public byte ColumnsInt { get; private set; }
-        public byte RowsInt { get; private set; }
-        public ushort Capacity { get; private set; }
-        public List<Disc> Discs { get; private set; }
-        public List<Column> Columns { get; private set; }
+        public readonly byte ColumnsInt;
+        public readonly byte RowsInt;
+        public readonly ushort Capacity;
+        public readonly List<Disc> Discs;
+        public readonly List<Column> Columns;
 
+        // Constructor
         public BoardInfo(BoardLoader boardLoader)
         {
             ColumnsInt = boardLoader.ColumnsInt;
@@ -21,15 +22,9 @@ namespace Board
             Discs = boardLoader.Discs;
             Columns = boardLoader.Columns;
         }
-
-        public int ColumnIndex(Column column)
-        {
-            return Columns.FindIndex( element => element == column);
-        }
-
-        public Disc GetDisc(int index)
-        {
-            return Discs[index];
-        }
+        
+        // Methods
+        public int ColumnIndex(Column column) => Columns.FindIndex( element => element == column);
+        public Disc GetDisc(int index) => Discs[index];
     }
 }

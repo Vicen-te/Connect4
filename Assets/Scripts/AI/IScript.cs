@@ -4,6 +4,6 @@ namespace AI
 {
     public interface IScript
     {
-       int ExecuteAlgorithm(BoardState boardState);
+       int ExecuteAlgorithm(BoardState boardState, int turn);
     }
 }

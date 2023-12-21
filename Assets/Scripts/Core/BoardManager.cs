@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Core
 {
-    // setup board
+    // Setup board
     public sealed class BoardManager : MonoBehaviour
     {
         [SerializeField] private BoardLoader boardLoader;
@@ -21,8 +21,13 @@ namespace Core
             // Create board
             boardLoader.BuildBoard();
             
-            // Pass references
+            // Create reference Object
             BoardInfo = new BoardInfo(boardLoader);
+        }
+
+        public void ResetScene()
+        {
+            boardLoader.ResetDiscs();
         }
         
         public void ForEachColumnAddInteraction(IColumInteraction.Interaction method)

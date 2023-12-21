@@ -5,8 +5,6 @@ namespace Board
 {
     public class Disc : Space
     {
-        private int _actorOwner = -1;
-        public int ActorOwner => _actorOwner;
         public bool Visibility => spriteRenderer.enabled;
 
         private float _startYPosition;
@@ -30,11 +28,6 @@ namespace Board
         public void SetColor(Color color)
         {
             spriteRenderer.color = color;
-        }
-
-        public void SetActorOwner(int newActorOwner)
-        {
-            _actorOwner = newActorOwner;
         }
 
         public void StartAnimation()

@@ -5,21 +5,21 @@ namespace AI.MTD
 {
     public class ZobristNode : Node
     {
-        private int _hasValue;
-        public int HasValue => _hasValue;
+        public int HasValue { get; private set; }
+
         private ZobristKey _zobristKey;
         
         public ZobristNode(BoardState boardState, int turn, ZobristKey zobristKey, int hasValue = default) : base(boardState, turn)
         {
-            _hasValue = hasValue;
+            HasValue = hasValue;
             _zobristKey = new ZobristKey(zobristKey);
         }
         
         // HashMove
         public void GenerateHashValue()
         {
-            int zobristKeyInt = _zobristKey.Get(Position, Turn);
-            _hasValue ^= zobristKeyInt;
+            int zobristKeyInt = _zobristKey.Get(Position, ActorTurn.AI);
+            HasValue ^= zobristKeyInt;
         }
         
         // There is no template specialization (c++) in c# :/ 
@@ -36,24 +36,24 @@ namespace AI.MTD
                     continue;
                 }
 
-                int nextTurn = (Turn + 1) % 2;
-                GenerateNode(ref list, nextTurn, i);
+                ZobristNode node = GenerateNode(i);
+                list.Add(node);
             }
             
             return list;
         }
 
-        private void GenerateNode(ref List<ZobristNode> list, int nextTurn, int column)
+        private ZobristNode GenerateNode(int column)
         {
-            ZobristNode node = new ZobristNode(BoardState, nextTurn, _zobristKey, _hasValue);
+            int nextTurn = (Turn + 1) % 2;
+            ZobristNode node = new ZobristNode(BoardState, nextTurn, _zobristKey, HasValue);
             node.Position = node.BoardState.FirstDiscInColumn(column);
                 
             // Debug.Log($"Disc: {disc}, Column: {_columnSelected}");
             node.BoardState.AddDisc(node.Position, nextTurn);
-            node.Column = column;
+            node.ColumnSelected = column;
             node.GenerateHashValue();
-
-            list.Add(node);
+            return node;
         }
     }
 }

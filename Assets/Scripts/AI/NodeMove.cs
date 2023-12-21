@@ -1,6 +1,5 @@
 ﻿namespace AI
 {
-   public enum Actor { None = -1, Player, AI }
     public struct NodeMove
     {
         public int Score;

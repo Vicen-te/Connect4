@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Board;
+using Core.Actor;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace AI
 {
     public class MiniMax : MonoBehaviour, IScript
     {
         public int depth = 6;
+        private ActorTurn _actorTurn;
+        private int nodes;
+        private readonly Average average = new();
         
-        // AI == 1
-        private Actor _actor;
-        
-        public int ExecuteAlgorithm(BoardState boardState)
+        public int ExecuteAlgorithm(BoardState boardState, int turn)
         {
             /*
              *  MiniMax algorithm
@@ -21,18 +24,24 @@ namespace AI
              *                  new
              *          new new act new new new new
              */
-            
-            Node startNode = new Node(boardState, (int)Actor.Player);
+            nodes = 0;
+            _actorTurn = new ActorTurn(turn);
+            Node.SetActorTurn(_actorTurn);
+
+            Node startNode = new Node(boardState, _actorTurn.Opponent);
             int alpha = int.MinValue, beta = int.MaxValue;
             
-            NodeMove result = MiniMaxAlgorithm(startNode, depth-1, alpha, beta, Actor.AI);
-            Debug.Log($"Final:\n value: {result.Score}, column: {result.Column}");
+            NodeMove result = MiniMaxAlgorithm(startNode, depth-1, alpha, beta, _actorTurn.AI);
+            average.Add(nodes);
+            Debug.Log($"value: {result.Score}, column: {result.Column}, nodes: {nodes}, media: {average.Value}");
             
             return result.Column;
         }
 
-        private NodeMove MiniMaxAlgorithm(Node currentNode, int actualDepth, int alpha, int beta, Actor actor)
+        private NodeMove MiniMaxAlgorithm(Node currentNode, int actualDepth, int alpha, int beta, int turn)
         {
+            ++nodes;
+            
             // Suspend
             if (currentNode.IsEndOfGame() || actualDepth == 0)
             {
@@ -48,14 +57,14 @@ namespace AI
             List<Node> possibleMoves = currentNode.PossibleMoves();
             int column = 0;
 
-            if (actor == Actor.Player)
+            if (turn == _actorTurn.Opponent)
             {
                 int minEval = int.MaxValue;
                 for (int i = 0; i < possibleMoves.Count; ++i)
                 {
                     if(possibleMoves[i] == null) continue;
                     
-                    NodeMove currentMove = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, Actor.AI);
+                    NodeMove currentMove = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, _actorTurn.AI);
                     if (minEval > currentMove.Score)
                     {
                         minEval = currentMove.Score;
@@ -75,7 +84,7 @@ namespace AI
                 {
                     if(possibleMoves[i] == null) continue;
                     
-                    NodeMove currentMove = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, Actor.Player);
+                    NodeMove currentMove = MiniMaxAlgorithm(possibleMoves[i], actualDepth-1, alpha, beta, _actorTurn.Opponent);
                     if (maxEval < currentMove.Score)
                     {
                         maxEval = currentMove.Score;

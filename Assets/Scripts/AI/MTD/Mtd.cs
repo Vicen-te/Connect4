@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
 using Board;
+using Core.Actor;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace AI.MTD
 {
@@ -16,18 +15,33 @@ namespace AI.MTD
         public int maxIterations = 10;
         public int depth = 6;
         
-        public int ExecuteAlgorithm(BoardState boardState)
+        private int nodes;
+        private readonly Average average = new();
+
+        public void Initialize(int boardCapacity)
         {
+            _zobristKey = new ZobristKey(boardCapacity, 2);
+            _zobristKey.Print();
+            _transpositionTable = new TranspositionTable(hashTableLength);
+        }
+        
+        public int ExecuteAlgorithm(BoardState boardState, int turn)
+        {
+            nodes = 0;
+            ActorTurn actorTurn = new ActorTurn(turn);            
+            Node.SetActorTurn(actorTurn);
+
             if (_zobristKey == null)
             {
-                _zobristKey = new ZobristKey(boardState.Capacity, 2);
-                _zobristKey.Print();
-                _transpositionTable = new TranspositionTable(hashTableLength);
+                Initialize(boardState.Capacity);
             }
-            
-            ZobristNode startNode = new ZobristNode(boardState, (int)Actor.Player, _zobristKey);
+
+            ZobristNode startNode = new ZobristNode(boardState, actorTurn.Opponent, _zobristKey);
             NodeMove result = MtdAlgorithm(startNode);
-            Debug.Log($"Final:\n value: {-result.Score}, column: {result.Column}");
+            
+            average.Add(nodes);
+            Debug.Log($"value: {-result.Score}, column: {result.Column}, nodes: {nodes}, media: {average.Value}");
+            
             return result.Column;
         }
         
@@ -48,11 +62,11 @@ namespace AI.MTD
                 if (gamma == guess)
                 {
                     globalGuess = guess;
-                    Debug.Log("guess encontrado en iteracion " + i + " guess: " + guess);
+                    Debug.Log($"Guess: {guess}, found on iteration {i + 1}");
                     return scoringMove;
                 }
                 
-                Debug.Log("guess no encontrado");
+                Debug.Log("Guess not found");
             }
             globalGuess = guess;
             return scoringMove;
@@ -69,13 +83,13 @@ namespace AI.MTD
             if (record != null)
             {
                 // Si la profundidad es adecuada
-                if (record.depth > actualDepth)
+                if (record.Depth > actualDepth)
                 {
                     // Si el score se ajusta al valor gamma que arrastramos, entonces devolvemos la jugada adecuada.
-                    if (record.minScore > gamma)
-                        return new NodeMove (record.minScore, record.bestMove);
-                    if (record.maxScore < gamma)
-                        return new NodeMove (record.maxScore, record.bestMove);
+                    if (record.MinScore > gamma)
+                        return new NodeMove (record.MinScore, record.BestMove);
+                    if (record.MaxScore < gamma)
+                        return new NodeMove (record.MaxScore, record.BestMove);
                 }
             }	
             // Si no tenemos un registro de este tablero, lo "inicializamos".
@@ -83,28 +97,29 @@ namespace AI.MTD
             {
                 record = new BoardRecord
                 {
-                    hashValue = currentNode.HasValue,
-                    depth = actualDepth,
-                    minScore = int.MinValue + 1,
-                    maxScore = int.MaxValue
+                    HashValue = currentNode.HasValue,
+                    Depth = actualDepth,
+                    MinScore = int.MinValue + 1,
+                    MaxScore = int.MaxValue
                 };
             }
 
+            ++nodes;
             // Ahora que ya tenemos un registro empezamos a buscar jugada.
             // Si estamos al final de la recursión.
             if (currentNode.IsEndOfGame() || actualDepth == 0)
             {
-                record.maxScore = currentNode.Evaluate();
+                record.MaxScore = currentNode.Evaluate();
                 if (actualDepth != 0)
                 {
-                    record.maxScore = actualDepth % 2 == 0 ? record.maxScore : -record.maxScore;
-                    record.maxScore *= actualDepth+1;
+                    record.MaxScore = actualDepth % 2 == 0 ? record.MaxScore : -record.MaxScore;
+                    record.MaxScore *= actualDepth+1;
                 }
-                record.maxScore = depth % 2 == 0 ? -record.maxScore : record.maxScore;
+                record.MaxScore = depth % 2 == 0 ? -record.MaxScore : record.MaxScore;
                 
-                record.minScore = record.maxScore;
+                record.MinScore = record.MaxScore;
                 _transpositionTable.SaveRecord(record);
-                return new NodeMove (record.maxScore, currentNode.ColumnSelected);
+                return new NodeMove (record.MaxScore, currentNode.ColumnSelected);
             }
             
             //No es estado final o suspensión  
@@ -124,14 +139,14 @@ namespace AI.MTD
                 if (maxEval < currentMove.Score)
                 {
                     column = possibleMoves[i].ColumnSelected;
-                    record.bestMove = column;
+                    record.BestMove = column;
                     maxEval = currentMove.Score;
                 }
 
                 if (maxEval < gamma) 
-                    record.maxScore = maxEval;
+                    record.MaxScore = maxEval;
                 else
-                    record.minScore = maxEval;
+                    record.MinScore = maxEval;
             }
 
             _transpositionTable.SaveRecord(record);

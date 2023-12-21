@@ -110,16 +110,10 @@ namespace Board
                 // Margin space
                 Vector2 spacePosition = new Vector2(row * (_spaceRadius * 2 + spaceAddition), 
                                                     column * (_spaceRadius * 2 + spaceAddition));
-                spacePosition += Offset();
-                
-                // Change Space and Disc Position and Game Position
-                KeyValuePair<int, int> gamePosition = new KeyValuePair<int, int>(row, column);                
-                
+                spacePosition += Offset();    
                 space.SetPosition(spacePosition);
-                space.SetGamePosition(gamePosition);
                 
                 disc.SetPosition(spacePosition);
-                disc.SetGamePosition(gamePosition);
                 disc.SetVisibility(false);           //< Also the visibility
                 disc.SetStartPositionForAnimation((columnsInt * (_spaceRadius * 2 + spaceAddition))/2);
                 disc.SetLastPositionForAnimation(spacePosition.y);
@@ -135,6 +129,15 @@ namespace Board
             offset.y -=   (rowsInt-1)  * (_spaceRadius + spaceAddition / 2);
 
             return offset;
+        }
+
+        public void ResetDiscs()
+        {
+            foreach (var disc in Discs)
+            {
+                disc.SetVisibility(false);
+                disc.SetColor(Color.white);
+            }
         }
     }
 }
