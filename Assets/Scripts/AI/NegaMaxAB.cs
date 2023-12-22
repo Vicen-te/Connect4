@@ -80,19 +80,5 @@ namespace AI
         
         public NodeMove Algorithm(Node currentNode, int actualDepth, int alpha, int beta) =>
             NegaMaxAlgorithm(currentNode, actualDepth, alpha, beta);
-
-        public NodeMove Evaluation(Node currentNode, int actualDepth)
-        {
-            int value = currentNode.Evaluate();
-                
-            if (actualDepth != 0)
-            {
-                value = actualDepth % 2 == 0 ? value : -value;
-                value *= actualDepth + 1;
-            }
-            value = depth % 2 == 0 ? -value : value;
-                
-            return new NodeMove(value, currentNode.ColumnSelected);
-        }
     }
 }

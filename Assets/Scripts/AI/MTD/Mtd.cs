@@ -103,7 +103,7 @@ namespace AI.MTD
                     MaxScore = int.MaxValue
                 };
             }
-
+            
             ++nodes;
             // Ahora que ya tenemos un registro empezamos a buscar jugada.
             // Si estamos al final de la recursión.
@@ -138,8 +138,8 @@ namespace AI.MTD
                 // Actualizar mejor score
                 if (maxEval < currentMove.Score)
                 {
-                    column = possibleMoves[i].ColumnSelected;
-                    record.BestMove = column;
+                    record.BestMove = i;
+                    column = i;
                     maxEval = currentMove.Score;
                 }
 
