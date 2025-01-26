@@ -1,206 +1,253 @@
 using System.Collections;
 using System.Collections.Generic;
-using AI.MTD;
+using AI.Algorithms.MTD;
 using Board;
 using Core.Actor;
 using Interaction;
+using UI;
 using UnityEngine;
 
 namespace Core
 {
+    /// <summary>
+    /// Manages the overall game flow, including turns, actors, and interactions with the board.
+    /// </summary>
     public class GameManager : MonoBehaviour
     {
-        private int _actors = 0;
+        /// <summary>Total number of actors (players and AI).</summary>
+        private int _totalActors = 0;
 
-        [Header("Settings")] [SerializeField] private int startPlayer = 0;
-
-        [Header("References")] [SerializeField]
-        private BoardManager boardManager;
-
-        private BoardInfo BoardInfo => boardManager.BoardInfo;
+        /// <summary>Reference to the BoardManager, responsible for managing the board setup and visuals.</summary>
+        [SerializeField] private BoardManager boardManager;
+        
+        /// <summary>The index of the player who starts the game (0-based).</summary>
+        [SerializeField] private int initialPlayerIndex = 0;
+        
+        /// <summary>Contains information about the current state of the board.</summary>
+        private BoardInfo _boardInfo;
+        
+        /// <summary>Tracks the logical state of the board, including disc positions.</summary>
         private BoardState _boardState;
 
-        [Header("Actors")] [SerializeField] private List<ActorManager> actorList;
-
-        [Header("AI")] 
-        [SerializeField] private float waitSecondsInteraction = 0.2f;
-        [SerializeField] private float waitSecondsPlays = 1f;
-        [SerializeField] private int automatePlays = 100;
-        private int automatePlaysRemain;
-
-        // 0: FirstPlayer, 1: SecondPlayer, ...
-        private int _turn;
-    
-        // private bool _isFinished;
-        private ActorManager _currentActor;
-
-        [Header("UI")] 
-        [SerializeField] private UIManager uiManager;
+        /// <summary>Total number of automated plays (used in simulations).</summary>
+        [SerializeField] private int maxAutomatedPlays = 100;
         
+        /// <summary>Remaining number of automated plays.</summary>
+        private int _remainingAutomatedPlays;
+
+        /// <summary>Tracks the index of the current turn (0-based).</summary>
+        private int _currentTurnIndex;
+    
+        /// <summary>The actor currently taking their turn.</summary>
+        private ActorManager _currentActor;
+        
+        /// <summary>List of all actors in the game (players and AI).</summary>
+        [SerializeField] private List<ActorManager> actors;
+        
+        /// <summary>Delay in seconds between AI interactions.</summary>
+        [Header("AI"), SerializeField] private float aiInteractionDelay = 0.2f;
+        
+        /// <summary>Delay in seconds between AI turns.</summary>
+        [SerializeField] private float aiTurnDelay = 1f;
+
+        /// <summary>Reference to the UIManager, which updates the game UI.</summary>
+        [Header("UI"), SerializeField] private UIManager uiManager;
+        
+        /// <summary>Determines whether animations are enabled for disc placement.</summary>
+        [SerializeField] private bool enableDiscAnimations;
+
+        
+        /// <summary>
+        /// Called when the game starts. Initializes the board, actors, and other game settings.
+        /// </summary>
         private void Start()
         {
             int aiCount = 0;
-            foreach (ActorManager actorManager in actorList)
+            
+            // Initialize AI actors and count them
+            foreach (ActorManager actorManager in actors)
             {
-                if (actorManager.GetType() == typeof(AIManager))
-                {
-                    AIManager aiManager = (AIManager)actorManager;
-                    aiManager.GetClassWithInterface();
-                    aiManager.OnInteraction += OnMoveDone;
-                    aiManager.SetWaitSeconds(waitSecondsInteraction);
-                    ++aiCount;
-                }
+                if (actorManager is not AIManager aiManager) continue;
+                aiManager.GetClassWithInterface();
+                aiManager.OnInteraction += HandleMoveCompletion;
+                aiManager.SetWaitSeconds(aiInteractionDelay);
+                ++aiCount;
             }
             
-            // Actors Count
-            _actors = actorList.Count;
+            _totalActors = actors.Count;
 
-            // Check AICount 
-            if (aiCount > 2 || (_actors > 2 && aiCount > 0))
+            // Validate the number of AI actors
+            if (aiCount > 2 || (_totalActors > 2 && aiCount > 0))
             {
-                Debug.LogError("Only can be two AIs");
+                Debug.LogError("Only up to two AI players are supported.");
                 return;
             }
             
-            boardManager.SetupScene();
-            automatePlaysRemain = automatePlays;
-            StartValues();
+            // Set up the board and initialize the game
+            _boardInfo = boardManager.SetupScene();
+            _remainingAutomatedPlays = maxAutomatedPlays;
+            InitializeGame();
         }
 
-        private void StartValues()
+        /// <summary>
+        /// Initializes the game state, setting up turns and starting values.
+        /// </summary>
+        private void InitializeGame()
         {
-            // Minus one position, it will be added in the ChangeTurn method 
-            _turn = startPlayer-1;
-
-            _boardState = new BoardState(BoardInfo);
-        
-            ChangeTurn();
-            CheckActor();
+            // Subtract 1 to set the first player correctly (startPlayer - 1)
+            _currentTurnIndex = initialPlayerIndex-1;
             
-            uiManager.Initialize(_boardState, automatePlays);
+            // Create a new board state based on the current board info
+            _boardState = new BoardState(_boardInfo);
+        
+            // Change turn to the next player
+            ChangeTurn();
+            
+            // Update the control interactions based on the current actor's type (player or AI)
+            UpdateActorControls();
+            
+            // Initialize UI with current board state and automated plays remaining
+            uiManager.Initialize(_boardState, maxAutomatedPlays);
         }
     
+        /// <summary>
+        /// Changes the turn to the next actor in the list and notifies them.
+        /// </summary>
         private void ChangeTurn()
         {
-            _turn = (_turn + 1) % _actors;
+            // Move to the next actor, looping back to the first actor when necessary
+            _currentTurnIndex = (_currentTurnIndex + 1) % _totalActors;
             
-            // Set current actor
-            _currentActor = actorList[_turn];
+            // Set the current actor based on the updated turn index
+            _currentActor = actors[_currentTurnIndex];
             
-            // Execute AI algorithm
-            _currentActor.OnGameTurnChange(BoardInfo, _boardState, _turn);
+            // Notify the actor that it's their turn and pass the current board state
+            _currentActor.OnGameTurnChange(_boardInfo, _boardState, _currentTurnIndex);
         }
 
-        // Change settings (column interactions) 
-        private void CheckActor()
+        /// <summary>
+        /// Updates the board interaction controls based on the current actor's type.
+        /// Player has control over columns, while AI does not.
+        /// </summary>
+        private void UpdateActorControls()
         {
-            // Turn column interaction on if it is the player's turn or off if it is the AI's turn
-            ColumnsIteration(_currentActor.GetType() == typeof(PlayerManager));
+            // Check if the current actor is a player (AI doesn't need column interactions)
+            bool isPlayerTurn = _currentActor is PlayerManager;
+            UpdateColumnInteractions(isPlayerTurn);
         }
         
-        private void ColumnsIteration(bool active)
+        /// <summary>
+        /// Enables or disables column interactions on the board depending on the player's or AI's turn.
+        /// </summary>
+        /// <param name="enable">True to enable column interactions (for players), false for AI turns.</param>
+        private void UpdateColumnInteractions(bool enable)
         {
-            if (active)
-                boardManager.ForEachColumnAddInteraction(OnMoveDone);
+            if (enable)
+                _boardInfo.EnableColumnInteractions(HandleMoveCompletion);
             else
-                boardManager.ForEachColumnRemoveInteraction(OnMoveDone);
+                _boardInfo.DisableColumnInteractions(HandleMoveCompletion);
         }
 
-        private void OnMoveDone(Column column)
+        /// <summary>
+        /// Handles the completion of a move in a specific column and updates the board.
+        /// This is triggered once a disc is placed.
+        /// </summary>
+        /// <param name="column">The column where the move was made.</param>
+        private void HandleMoveCompletion(Column column)
         {
-            // BoardState
-            int columnIndex = BoardInfo.ColumnIndex(column);
+            // Get the index of the column where the move was made
+            int columnIndex = _boardInfo.GetColumnIndex(column);
             
-            // Execute the last turn again
+            // Check if the column is full (if so, retry the turn)
             if (!_boardState.IsColumnEmpty(columnIndex))
             {
-                _turn -= 1;
+                _currentTurnIndex -= 1;
                 ChangeTurn();
                 return;
             }
             
-            int discIndex = _boardState.FirstDiscInColumn(columnIndex);
-            _boardState.AddDisc(discIndex, _turn);
+            // Get the next available disc index and place the disc in the column
+            int discIndex = _boardState.GetNextAvailableDiscIndex(columnIndex);
+            _boardState.PlaceDisc(discIndex, _currentTurnIndex);
             
-            // Reference to Disc
-            Disc disc = BoardInfo.GetDisc(discIndex);
-            
-            // Change disc values
+            // Get the disc object and update its properties
+            Disc disc = _boardInfo.GetDisc(discIndex);
             disc.SetVisibility(true);
-            // disc.StartAnimation();
+            
+            // Start disc animation if enabled
+            if(enableDiscAnimations) 
+                disc.StartAnimation();
+            
+            // Set the color of the disc to the current player's color
             disc.SetColor(_currentActor.GetColor());
+            
+            // Update the UI with the current board state
             uiManager.UpdateDiscs(_boardState);
             
-            ColumnsIteration(false);
+            // Disable further column interactions until the next turn
+            UpdateColumnInteractions(false);
             
-            // Results     
-            if (_boardState.Winner(_turn))
+            // Check if there's a winner or a draw 
+            if (_boardState.HasWinner(_currentTurnIndex))
             {
-                // Debug.Log($"WIN: {_turn}!!!");
-                if (_turn == 0)
-                    uiManager.AddFirstWin(automatePlays);
-                else
-                    uiManager.AddSecondWin(automatePlays);
-                
-                Restart();
-                _boardState.PrintResult($"Win {automatePlays-automatePlaysRemain} - Turn {_turn}");
+                uiManager.RegisterWin(_currentTurnIndex, maxAutomatedPlays);
+                _boardState.PrintResult($"Win {maxAutomatedPlays-_remainingAutomatedPlays} - Turn {_currentTurnIndex}");
+                RestartGame();
             }
             else if (_boardState.Draw())
             {
-                // Debug.Log("DRAW!!!");
-                uiManager.AddDraw(automatePlays);
-                
-                Restart();
+                uiManager.RegisterDraw(maxAutomatedPlays);
                 _boardState.PrintResult($"Draw");
+                RestartGame();
             }
             else
             {
+                // Change to the next turn and update controls
                 ChangeTurn();
-                CheckActor();
+                UpdateActorControls();
             }
         }
-        
-        private void Restart()
-        {
-            // Subtract play
-            --automatePlaysRemain;
-            _boardState.PrintDiscs();
 
-            if (automatePlaysRemain == 0)
+        /// <summary>
+        /// Restarts the game for the next round or ends it if no plays remain.
+        /// </summary>
+        private void RestartGame()
+        {
+            // Decrease the remaining automated plays counter
+            --_remainingAutomatedPlays;
+            
+            // Print the result of the game
+            _boardState.LogResult();
+
+            // If no more plays remain, exit the game
+            if (_remainingAutomatedPlays == 0)
             {
-                // ExitGame();
+                Debug.Log("Exiting...");
                 return;
             }
 
-            foreach (ActorManager actorManager in actorList)
+            // Reinitialize AI (if any) for the next round
+            foreach (ActorManager actor in actors)
             {
-                actorManager.TryGetComponent(out Mtd mtd);
-                if (mtd != null)
+                if (actor.TryGetComponent(out Mtd mtd))
                 {
                     mtd.Initialize(_boardState.Capacity);
                 }
             }
 
+            // Start a coroutine to reset the board for the next round
             StartCoroutine(ResetBoard());
         }
 
-        // Reset Board
+        /// <summary>
+        /// Resets the board and starts a new game round.
+        /// </summary>
         private IEnumerator ResetBoard()
         {
-            yield return new WaitForSeconds(waitSecondsPlays);
-            boardManager.ResetScene();
-            StartValues();
-        }
-
-        private void ExitGame()
-        {
-            #if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
-            #elif UNITY_WEBPLAYER
-                Application.OpenURL(webplayerQuitURL);
-            #else
-                Application.Quit();
-            #endif
+            // Wait for a short delay before resetting the board
+            yield return new WaitForSeconds(aiTurnDelay);
+            _boardInfo.ResetDiscs();
+            InitializeGame();
         }
     }
 }

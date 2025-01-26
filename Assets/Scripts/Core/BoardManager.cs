@@ -1,49 +1,29 @@
-﻿using System.Collections.Generic;
-using Board;
-using Interaction;
+﻿using Board;
 using UnityEngine;
 
 namespace Core
 {
-    // Setup board
+    /// <summary>
+    /// BoardManager handles the setup and initialization of the game board
+    /// </summary>
     public sealed class BoardManager : MonoBehaviour
     {
+        /// <summary>
+        /// Reference to the BoardLoader component responsible for building the board
+        /// </summary>
         [SerializeField] private BoardLoader boardLoader;
-        public BoardInfo BoardInfo { get; private set; }
-        private byte ColumnsInt => boardLoader.ColumnsInt;
-        private byte RowsInt => boardLoader.RowsInt;
-        private ushort Capacity => boardLoader.Capacity;
-        private List<Disc> Discs => boardLoader.Discs;
-        private List<Column> Columns => boardLoader.Columns;
         
-        public void SetupScene()
+        /// <summary>
+        /// Sets up the scene by creating the game board and returning board information.
+        /// </summary>
+        /// <returns>A BoardInfo object containing information about the board.</returns>
+        public BoardInfo SetupScene()
         {
-            // Create board
+            // Build the board using the BoardLoader
             boardLoader.BuildBoard();
             
-            // Create reference Object
-            BoardInfo = new BoardInfo(boardLoader);
-        }
-
-        public void ResetScene()
-        {
-            boardLoader.ResetDiscs();
-        }
-        
-        public void ForEachColumnAddInteraction(IColumInteraction.Interaction method)
-        {
-            for (byte columnInt = 0; columnInt < ColumnsInt; ++columnInt)
-            {
-                Columns[columnInt].OnInteraction += method;
-            }
-        }
-        
-        public void ForEachColumnRemoveInteraction(IColumInteraction.Interaction method)
-        {
-            for (byte columnInt = 0; columnInt < ColumnsInt; ++columnInt)
-            {
-                Columns[columnInt].OnInteraction -= method;
-            }
+            // Create and return a reference object that holds board information
+            return new BoardInfo(boardLoader);
         }
     }
 }

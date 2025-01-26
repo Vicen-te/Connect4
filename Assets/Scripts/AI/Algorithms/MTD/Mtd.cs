@@ -3,7 +3,7 @@ using Board;
 using Core.Actor;
 using UnityEngine;
 
-namespace AI.MTD
+namespace AI.Algorithms.MTD
 {
     public class Mtd : MonoBehaviour, IScript
     {
@@ -40,7 +40,7 @@ namespace AI.MTD
             NodeMove result = MtdAlgorithm(startNode);
             
             average.Add(nodes);
-            Debug.Log($"value: {-result.Score}, column: {result.Column}, nodes: {nodes}, media: {average.Value}");
+            Debug.Log($"value: {-result.Score}, column: {result.Column}, nodes: {nodes}, mean: {average.Value}");
             
             return result.Column;
         }

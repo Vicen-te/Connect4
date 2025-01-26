@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Board;
 using Core.Actor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-namespace AI
+namespace AI.Algorithms
 {
     public class MiniMax : MonoBehaviour, IScript
     {
@@ -33,7 +32,7 @@ namespace AI
             
             NodeMove result = MiniMaxAlgorithm(startNode, depth-1, alpha, beta, _actorTurn.AI);
             average.Add(nodes);
-            Debug.Log($"value: {result.Score}, column: {result.Column}, nodes: {nodes}, media: {average.Value}");
+            Debug.Log($"value: {result.Score}, column: {result.Column}, nodes: {nodes}, mean: {average.Value}");
             
             return result.Column;
         }

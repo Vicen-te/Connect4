@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Board;
 using Core.Actor;
 using UnityEngine;
 
-namespace AI
+namespace AI.Algorithms
 {
-    public class PrincipalVariationSearch  : MonoBehaviour, IScript
+    public class NegaScout : MonoBehaviour, IScript
     {
         public int depth = 6;
         private int nodes;
@@ -23,20 +22,20 @@ namespace AI
             Node startNode = new Node(boardState, actorTurn.Opponent);
             int alpha = int.MinValue + 1, beta = int.MaxValue;
             
-            NodeMove result = PVSAlgorithm(startNode, depth-1, alpha, beta);
+            NodeMove result = NegaScoutAlgorithm(startNode, depth-1, alpha, beta);
             average.Add(nodes);
-            Debug.Log($"value: {-result.Score}, column: {result.Column}, nodes: {nodes}, media: {average.Value}");
+            Debug.Log($"value: {-result.Score}, column: {result.Column}, nodes: {nodes}, mean: {average.Value}");
             
             return result.Column;
         }
 
-        private NodeMove PVSAlgorithm(Node currentNode, int actualDepth, int alpha, int beta)
+        private NodeMove NegaScoutAlgorithm(Node currentNode, int actualDepth, int alpha, int beta)
         {
             ++nodes;
             // Suspend, If we are done recursing.
             if (currentNode.IsEndOfGame() || actualDepth == 0)
             {
-               int value = currentNode.Evaluate();
+                int value = currentNode.Evaluate();
                 
                 if (actualDepth != 0)
                 {
@@ -48,8 +47,9 @@ namespace AI
                 return new NodeMove(value, currentNode.ColumnSelected);
             }
 
-            int bestScore = int.MinValue + 1;
+            int bestScore = alpha;
             int bestColumn = -1;
+            int adaptiveBeta = beta; //< keep track of the Test window value
             
             List<Node> possibleMoves = currentNode.PossibleMoves();
             
@@ -57,29 +57,19 @@ namespace AI
             for (int i = 0; i < possibleMoves.Count; ++i)
             {
                 if (possibleMoves[i] == null) continue;
-
-                NodeMove currentMove;
-                if (possibleMoves[i] == possibleMoves.First())
+                
+                // search with a null window
+                NodeMove currentMove = NegaScoutAlgorithm(possibleMoves[i], actualDepth-1, -adaptiveBeta, -alpha);
+                currentMove.InverseScore();
+                
+                if (currentMove.Score > bestScore && currentMove.Score < beta && i > 0 && actualDepth < 1)
                 {
-                    // search with a normal window
-                    currentMove = PVSAlgorithm(possibleMoves[i], actualDepth-1, -beta , -alpha);
+                    // re-search
+                    currentMove = NegaScoutAlgorithm(possibleMoves[i], actualDepth, -beta, -currentMove.Score);
                     currentMove.InverseScore();
-                }
-                else
-                {
-                    // search with a null window
-                    currentMove = PVSAlgorithm(possibleMoves[i], actualDepth-1, -alpha-1 , -alpha);
-                    currentMove.InverseScore();
-
-                    // if it failed high
-                    if (currentMove.Score > alpha && currentMove.Score < beta) 
-                    {
-                        // do a full re-search
-                        currentMove = PVSAlgorithm(possibleMoves[i], actualDepth-1, -beta , -currentMove.Score); 
-                        currentMove.InverseScore();
-                    }
                 }
                 
+                // Update the best score.
                 if (currentMove.Score > bestScore)
                 {
                     bestScore = currentMove.Score;
@@ -87,12 +77,18 @@ namespace AI
                 }
                 
                 alpha = Math.Max(alpha, bestScore);
-                
+               
+                // Debug.Log($"Depth: {actualDepth}, alpha: {alpha}, beta: {beta}, " +
+                //           $"bestColumn: {bestColumn}, bestScore: {bestScore} i: {i}");
+               
                 // if we're outside the bounds, prune by exiting
-                if (beta <= alpha) 
-                    break;
+                if (alpha >= beta) 
+                    return new NodeMove(bestScore, bestColumn);
+
+                // otherwise update the window location
+                adaptiveBeta = alpha + 1;
             }
-            return new NodeMove(bestScore, bestColumn); // fail-hard
+            return new NodeMove(bestScore, bestColumn);
         }
     }
 }

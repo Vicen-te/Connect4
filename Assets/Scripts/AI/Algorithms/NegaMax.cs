@@ -1,37 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Board;
 using Core.Actor;
 using UnityEngine;
 
-namespace AI
+namespace AI.Algorithms
 {
-    public class NegaMaxAB : MonoBehaviour, IScript
+    public class NegaMax : MonoBehaviour, IScript
     {
         public int depth = 6;
-        public int Nodes { get; private set; }
+        private int nodes;
         private readonly Average average = new();
-
+        
         public int ExecuteAlgorithm(BoardState boardState, int turn)
         {
-            Nodes = 0;
+            nodes = 0;
             ActorTurn actorTurn = new ActorTurn(turn);
             Node.SetActorTurn(actorTurn);
 
             Node startNode = new Node(boardState, actorTurn.Opponent);
-            int alpha = int.MinValue + 1, beta = int.MaxValue;
-            
-            NodeMove result = NegaMaxAlgorithm(startNode, depth-1, alpha, beta);
-            average.Add(Nodes);
-            Debug.Log($"value: {-result.Score}, column: {result.Column}, nodes: {Nodes}, media: {average.Value}");
+            NodeMove result = NegaMaxAlgorithm(startNode, depth-1);
+            average.Add(nodes);
+            Debug.Log($"value: {result.Score}, column: {result.Column}, nodes: {nodes}, mean: {average.Value}");
             
             return result.Column;
         }
 
-        private NodeMove NegaMaxAlgorithm(Node currentNode, int actualDepth, int alpha, int beta)
+        private NodeMove NegaMaxAlgorithm(Node currentNode, int actualDepth)
         {
-            ++Nodes;
+            ++nodes;
             
             // Suspend
             if (currentNode.IsEndOfGame() || actualDepth == 0)
@@ -57,7 +53,7 @@ namespace AI
             {
                 if (possibleMoves[i] == null) continue;
                 
-                NodeMove currentMove = NegaMaxAlgorithm(possibleMoves[i], actualDepth-1, -beta, -alpha);
+                NodeMove currentMove = NegaMaxAlgorithm(possibleMoves[i], actualDepth-1);
                 currentMove.InverseScore();
                 
                 if (maxEval < currentMove.Score)
@@ -65,20 +61,8 @@ namespace AI
                     maxEval = currentMove.Score;
                     column = i;
                 }
-                alpha = Math.Max(alpha, currentMove.Score);
-
-                if (beta <= alpha) 
-                    return new NodeMove(maxEval,column);
             }
             return new NodeMove(maxEval,column);
         }
-
-        public void ResetNodes()
-        {
-            Nodes = 0;
-        }
-        
-        public NodeMove Algorithm(Node currentNode, int actualDepth, int alpha, int beta) =>
-            NegaMaxAlgorithm(currentNode, actualDepth, alpha, beta);
     }
 }

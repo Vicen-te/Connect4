@@ -1,4 +1,4 @@
-namespace AI.MTD
+namespace AI.Algorithms.MTD
 {
     public class BoardRecord
     {

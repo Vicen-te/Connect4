@@ -2,7 +2,7 @@ using Board;
 using Core.Actor;
 using UnityEngine;
 
-namespace AI
+namespace AI.Algorithms
 {
     public class AspirationWindow : MonoBehaviour, IScript
     {
@@ -33,7 +33,7 @@ namespace AI
             
             NodeMove result = AspirationWindowAlgorithm(startNode, alpha, beta);
             average.Add(nodes);
-            Debug.Log($"value: {-result.Score}, column: {result.Column}, nodes: {nodes}, media: {average.Value}");
+            Debug.Log($"value: {-result.Score}, column: {result.Column}, nodes: {nodes}, mean: {average.Value}");
             
             return result.Column;
         }

@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -167,15 +166,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b4d33f4bf35f7544285e305afd608a37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startPlayer: 0
-  boardManager: {fileID: 914084844}
-  actorList:
+  boardManager: {fileID: 914084846}
+  initialPlayerIndex: 0
+  maxAutomatedPlays: 5
+  actors:
   - {fileID: 1757537501}
-  - {fileID: 2104119596}
-  waitSecondsInteraction: 0.05
-  waitSecondsPlays: 1
-  automatePlays: 1
+  - {fileID: 456733012}
+  aiInteractionDelay: 0.05
+  aiTurnDelay: 1
   uiManager: {fileID: 314436437}
+  enableDiscAnimations: 0
 --- !u!1 &61956518
 GameObject:
   m_ObjectHideFlags: 0
@@ -1193,7 +1193,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 914084843}
-  - component: {fileID: 914084844}
+  - component: {fileID: 914084846}
   - component: {fileID: 914084845}
   m_Layer: 0
   m_Name: Board
@@ -1217,19 +1217,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &914084844
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 914084842}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b0550ab69fa4a9eb44f0be4f3a4ed91, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  boardLoader: {fileID: 914084845}
 --- !u!114 &914084845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1242,13 +1229,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a577ef4be12e4d06945ce115db029511, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  columnsInt: 7
-  rowsInt: 6
+  numColumns: 7
+  numRows: 6
   spaceAddition: 0.25
   spacePrefab: {fileID: 4355786928323130558, guid: b09bfa79f51732c4cae5ed9da8fce54d, type: 3}
   discPrefab: {fileID: 4355786928323130558, guid: f23edc4fe16162c4f833982ece829616, type: 3}
   backGroundPrefab: {fileID: 2533050337017266198, guid: 6171414a04993e44a83eb29df2b68015, type: 3}
   columnPrefab: {fileID: 2533050337017266198, guid: 21e9fda9f06df6b46b11c6519de1c5d3, type: 3}
+--- !u!114 &914084846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 914084842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b0550ab69fa4a9eb44f0be4f3a4ed91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boardLoader: {fileID: 914084845}
 --- !u!1 &955744747
 GameObject:
   m_ObjectHideFlags: 0

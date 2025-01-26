@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Board;
 
-namespace AI.MonteCarlo
+namespace AI.Algorithms.MonteCarlo
 {
     public class MctsNode : Node
     {
@@ -65,8 +65,8 @@ namespace AI.MonteCarlo
         {
             int nextTurn = (Turn + 1) % 2;
             MctsNode node = new MctsNode(BoardState, nextTurn, Depth - 1, this);
-            node.Position = node.BoardState.FirstDiscInColumn(column);
-            node.BoardState.AddDisc(node.Position, nextTurn);
+            node.Position = node.BoardState.GetNextAvailableDiscIndex(column);
+            node.BoardState.PlaceDisc(node.Position, nextTurn);
             node.ColumnSelected = column;
             return node;
         }

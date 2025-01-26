@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace AI.MTD
+namespace AI.Algorithms.MTD
 {
     public class ZobristKey
     {

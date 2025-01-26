@@ -5,7 +5,7 @@ using Board;
 using Core.Actor;
 using UnityEngine;
 
-namespace AI.MonteCarlo
+namespace AI.Algorithms.MonteCarlo
 {
     public class MonteCarlo : MonoBehaviour, IScript
     {
@@ -30,7 +30,7 @@ namespace AI.MonteCarlo
             // Algorithm
             MctsNode result = MonteCarloAlgorithm(startNode);
             average.Add(nodes);
-            Debug.Log($"value: {result.RewardsCount/result.VisitCount}, column: {result.ColumnSelected}, nodes: {nodes}, media: {average.Value}");
+            Debug.Log($"value: {result.RewardsCount/result.VisitCount}, column: {result.ColumnSelected}, nodes: {nodes}, mean: {average.Value}");
 
             // result
             return result.ColumnSelected;

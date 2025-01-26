@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Board;
 
-namespace AI.MTD
+namespace AI.Algorithms.MTD
 {
     public class ZobristNode : Node
     {
@@ -47,10 +47,10 @@ namespace AI.MTD
         {
             int nextTurn = (Turn + 1) % 2;
             ZobristNode node = new ZobristNode(BoardState, nextTurn, _zobristKey, HasValue);
-            node.Position = node.BoardState.FirstDiscInColumn(column);
+            node.Position = node.BoardState.GetNextAvailableDiscIndex(column);
                 
             // Debug.Log($"Disc: {disc}, Column: {_columnSelected}");
-            node.BoardState.AddDisc(node.Position, nextTurn);
+            node.BoardState.PlaceDisc(node.Position, nextTurn);
             node.ColumnSelected = column;
             node.GenerateHashValue();
             return node;

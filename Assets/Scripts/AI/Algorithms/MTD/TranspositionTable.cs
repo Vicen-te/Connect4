@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace AI.MTD
+namespace AI.Algorithms.MTD
 {
     public class TranspositionTable
     {
@@ -12,7 +12,7 @@ namespace AI.MTD
         public int OverwrittenRecords { get; private set; }
         public int NotFoundRecords { get; private set; }
         
-        // RegCoincidences, RegNoCoincidencesx
+        // RegCoincidences, RegNoCoincidences
 
         public TranspositionTable(int length)
         {

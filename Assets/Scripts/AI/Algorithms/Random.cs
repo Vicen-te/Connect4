@@ -1,7 +1,7 @@
 ﻿using Board;
 using UnityEngine;
 
-namespace AI
+namespace AI.Algorithms
 {
     public class Random : MonoBehaviour, IScript
     {
